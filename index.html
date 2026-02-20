@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kan-do-it</title>
+    <title>Имя таблицы, продуктивной работы!</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!--header-->
     <header>
-        <button name="show-sidebar-btn">show sidebar</button>
         <h1 class="header-logo">Kan-do-it</h1>
         <nav>
             <a>username</a>
@@ -19,18 +18,221 @@
 
     <!--основной блок-->
     <div class="main-div">
-        <sidebar class="sidebar-unhidden">
-            <div class="table-name"><p>Table1</p><></div>
-            <div class="table-name">Table 2</div>
-            <div class="table-name selected">Current table</div>
-            <div class="table-name">Table 4</div>
-        </sidebar>
-        <div>
+        <!-- <sidebar class="sidebar-unhidden">
+            <div class="table-name"><p>Table1</p><img style="visibility: hidden;" src="src/icon/select"></div>
+            <div class="table-name"><p>Table2</p><img style="visibility: hidden;"src="src/icon/select"></div>
+            <div class="table-name table-name-selected"><p>CurrentTable</p><img src="src/icon/select"></div>
+            <div class="table-name"><p>Table2</p><img style="visibility: hidden;"src="src/icon/select"></div></div>
+        </sidebar> -->
 
+        <sidebar id="sidebar">
+            <button class="toggle-btn" onclick="toggleMenu()">
+                <span class="icon">☰</span>
+                <span class="text">Свернуть</span>
+            </button>
+            
+            <div class="menu-item">
+                <span class="icon">🏠</span>
+                <span class="text">Доски</span>
+                <!--➕-->
+            </div>
+            <div class="menu-item">
+                <span class="icon">👁️‍🗨️</span>
+                <span class="text">Пользователи</span>
+            </div>
+            <div class="menu-item">
+                <span class="icon">⚙️</span>
+                <span class="text">Настройки</span>
+            </div>
+            <div class="menu-item">
+                <span class="icon">📧</span>
+                <span class="text">Поделиться доской</span>
+            </div>
+            <div class="menu-item">
+                <span class="icon">🪄</span>
+                <span class="text">O разработчике</span>
+            </div>
+        </sidebar>        
+        <!--рабочее пространство (с колонками)-->
+        <div class="work-space">
+            <div class="columns">
+                <div class="column">
+                    <h2 class="column-name">В планах</h2>
+                    <div class="task">
+                        <h3 class="task-tag high-priority">Приоритетная задача</h3>
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 1</h3>
+                            <p>
+                                Большой текст задачи 1 не умещающийся в компактной карточке задачи...
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <h3 class="task-tag no-deadline">Без срока</h3>
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 2</h3>
+                            <p>
+                                Текст задачи 2
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time style="visibility: hidden;" class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 3</h3>
+                            <p>
+                                Текст задачи 3
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 4</h3>
+                            <p>
+                                Текст задачи 4
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <h2 class="column-name">В работе</h2>
+                    <div class="task">
+                        <h3 class="task-tag high-priority">Приоритетная задача</h3>
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 1</h3>
+                            <p>
+                                Большой текст задачи 1 не умещающийся в компактной карточке задачи...
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <h3 class="task-tag no-deadline">Без срока</h3>
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 2</h3>
+                            <p>
+                                Текст задачи 2
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time style="visibility: hidden;" class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 3</h3>
+                            <p>
+                                Текст задачи 3
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 4</h3>
+                            <p>
+                                Текст задачи 4
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <h2 class="column-name">Выполнено</h2>
+                    <div class="task">
+                        <h3 class="task-tag high-priority">Приоритетная задача</h3>
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 1</h3>
+                            <p>
+                                Большой текст задачи 1 не умещающийся в компактной карточке задачи...
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <h3 class="task-tag no-deadline">Без срока</h3>
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 2</h3>
+                            <p>
+                                Текст задачи 2
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time style="visibility: hidden;" class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 3</h3>
+                            <p>
+                                Текст задачи 3
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time style="visibility: hidden;" class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="task">
+                        <div class="task-content">
+                            <h3 class="task-name">Задача 4</h3>
+                            <p>
+                                Текст задачи 4
+                            </p>
+                            <div class="task-time-div">
+                                <time class="task-start-date" datetime="10-02-2026">от 10-02-2026</time>
+                                <time style="visibility: hidden;" class="task-end-date" datetime="20-02-2026">до 20-02-2026</time>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     <footer>
-        будущий подвал
+        <div>
+            Design, develop, test by @DmitryFromFIb. 2026
+        </div>
     </footer>
+
+    <script src="./js/script.js"></script>
 </body>
 </html>
