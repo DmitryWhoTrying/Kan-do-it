@@ -26,6 +26,7 @@ interface DragItem {
   taskId?: string;
 }
 
+
 const DraggableColumn: React.FC<DraggableColumnProps> = ({
   column,
   index,
