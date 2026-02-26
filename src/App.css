@@ -9,7 +9,7 @@ header {
   background-color: #E1FFD7;
   padding: 0px 5px 0px 0px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: space-between;
   border-bottom: 2px solid green;
   box-shadow: -0.1em 0.3em 0.3em #71aa7d;
@@ -60,7 +60,7 @@ nav a {
 }
 
 .work-space {
-  padding: 0px;
+  padding: 10px;
   margin: 0px;
   margin-left: 60px;
   transition: margin-left 0.3s ease;
@@ -191,6 +191,17 @@ button[name=log-out-btn]:hover {
   width: 200px;
 }
 
+/* Корректировка основного контента с учетом фиксированного меню */
+.main-div {
+    margin-left: 0px; /* Отступ равен ширине узкого меню */
+    transition: margin-left 0.3s ease;
+}
+
+#sidebar.expanded + .work-space,
+#sidebar.expanded ~ .work-space {
+    margin-left: 200px; /* Отступ равен ширине расширенного меню */
+}
+
 .toggle-btn {
   background-color: #528f6a;
   color: white;
@@ -236,6 +247,8 @@ button[name=log-out-btn]:hover {
 #sidebar.expanded .text {
   opacity: 1;
 }
+
+
 
 footer {
   width: 100%;
