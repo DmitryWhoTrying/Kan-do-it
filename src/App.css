@@ -376,3 +376,35 @@ footer div {
   border-radius: 10px;
   margin: 10px 0;
 }
+
+.board-title {
+  margin: 0 0 20px 0;
+  padding: 10px 20px;
+  background-color: #33A64C;
+  color: white;
+  border-radius: 30px;
+  display: inline-block;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Стили для редактируемых полей */
+[contenteditable="true"] {
+  outline: none;
+  cursor: text;
+  border-radius: 4px;
+  padding: 2px 4px;
+}
+
+[contenteditable="true"]:hover {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+
+[contenteditable="true"]:focus {
+  background-color: white;
+  box-shadow: 0 0 0 2px #33A64C;
+}
+
+.column-name[contenteditable="true"] {
+  display: inline-block;
+  min-width: 100px;
+}

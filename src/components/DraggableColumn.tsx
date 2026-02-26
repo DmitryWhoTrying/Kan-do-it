@@ -1,15 +1,21 @@
 import React, { useRef, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import { Column as ColumnType } from '../types';
+import { Column as ColumnType, Task as TaskType } from '../types';
 import Task from './Task';
 import { ItemTypes } from '../App';
+import { setColumn  } from '../store/boardSlice';
+import { useAppDispatch } from '../store/hooks';
+
 
 interface DraggableColumnProps {
   column: ColumnType;
   index: number;
+  boardId: string;
   onMoveTask: (taskId: string, sourceColumnId: string, targetColumnId: string) => void;
   onMoveColumn: (dragIndex: number, hoverIndex: number) => void;
+  onUpdateTask: (columnId: string, updatedTask: TaskType) => void;
+  
 }
 
 interface DragItem {
@@ -23,10 +29,13 @@ interface DragItem {
 const DraggableColumn: React.FC<DraggableColumnProps> = ({
   column,
   index,
+  boardId,
   onMoveTask,
-  onMoveColumn
+  onMoveColumn,
+  onUpdateTask
 }) => {
   const columnRef = useRef<HTMLDivElement>(null);
+  const dispatch = useAppDispatch();
 
   // Настройка drag для колонки
   const [{ isDragging }, drag, preview] = useDrag({
@@ -41,10 +50,12 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
     }),
   });
 
+
   // Настройка drop для колонки (принимает и задачи, и колонки)
   const [{ isOver }, drop] = useDrop<DragItem, void, { isOver: boolean }>({
     accept: [ItemTypes.COLUMN, ItemTypes.TASK],
-    drop: (item) => {
+    drop: (item) => 
+      {
       // Если это задача - перемещаем её в эту колонку
       if (item.type === ItemTypes.TASK) {
         console.log('Task dropped on column:', item);
@@ -90,6 +101,14 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
     preview(getEmptyImage(), { captureDraggingState: true });
   }, [preview]);
 
+  // Обновление заголовка колонки
+  const handleTitleChange = (newTitle: string) => {
+    dispatch(setColumn({
+      boardId,
+      column: { ...column, title: newTitle }
+    }));
+  };
+
   // Объединяем ref для drag и drop
   drag(drop(columnRef));
 
@@ -100,17 +119,26 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <div className="column-header">
-        <h2 className="column-name">{column.title}</h2>
+        <h2 
+          className="column-name"
+          contentEditable
+          suppressContentEditableWarning
+          onBlur={(e) => handleTitleChange(e.currentTarget.textContent || column.title)}
+        >
+          {column.title}
+        </h2>
         <span className="drag-handle">⋮⋮</span>
       </div>
       
       <div className="column-tasks">
         {column.tasks.map(task => (
           <Task
-            key={task.id}
-            task={task}
-            columnId={column.id}
-          />
+              key={task.id}
+              task={task}
+              columnId={column.id}
+              boardId={boardId}
+              onUpdateTask={onUpdateTask}
+            />
         ))}
       </div>
     </div>

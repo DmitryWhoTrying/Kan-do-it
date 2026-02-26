@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import DraggableColumn from './components/DraggableColumn';
-import { Task, Column as ColumnType } from './types';
+import { Task, Column as ColumnType, Board } from './types';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { useAppDispatch, useAppSelector } from './store/hooks';
+import { addBoard, addTask, removeColumn, removeTask, setColumn, setTask } from './store/boardSlice';
 
 
 export const ItemTypes = {
@@ -13,113 +15,151 @@ export const ItemTypes = {
 };
 
 function App() {
-  const [columns, setColumns] = useState<ColumnType[]>([
-    {
-      id: '1',
-      title: 'В планах',
-      tasks: [
-        {
-          id: '1',
-          title: 'Задача 1',
-          description: 'Большой текст задачи 1 не умещающийся в 3 строчках ну никак...',
-          priority: 'high',
-          startDate: '2026-02-10',
-          endDate: '2026-02-20',
-          tag: 'Приоритетная задача'
-        }
-      ]
-    },
-    {
-      id: '2',
-      title: 'В работе',
-      tasks: [
-        {
-          id: '5',
-          title: 'Задача 1',
-          description: 'Текст задачи...',
-          startDate: '2026-02-10'
-        },
-        {
-          id: '6',
-          title: 'Задача 1',
-          description: 'Текст задачи...',
-          startDate: '2026-02-10'
-        },
-        {
-          id: '7',
-          title: 'Задача 1',
-          description: 'Текст задачи...',
-          startDate: '2026-02-10'
-        }
-      ]
+
+  const dispatch = useAppDispatch();
+
+  const boards = useAppSelector(state => state.boards.boards);
+  const currentBoard = boards[0];
+  
+  // Инициализация демо-данных, если досок нет
+  useEffect(() => {
+    if (boards.length === 0) {
+      const demoBoard: Board = {
+        id: '1',
+        name: 'Проект "Канбан"',
+        owner: 'username',
+        users: ['username'],
+        columns: [
+          {
+            id: '1',
+            title: 'В планах',
+            order: 0,
+            tasks: [
+              {
+                id: '1',
+                title: 'Задача 1',
+                description: 'Большой текст задачи 1...',
+                priority: 'high',
+                startDate: '2026-02-10',
+                endDate: '2026-02-20',
+                tag: 'Приоритетная задача',
+                order: 0
+              },
+              {
+                id: '2',
+                title: 'Задача 2',
+                description: 'Текст задачи 2',
+                startDate: '2026-02-10',
+                tag: 'Без срока',
+                order: 1
+              }
+            ]
+          },
+          {
+            id: '2',
+            title: 'В работе',
+            order: 1,
+            tasks: [
+              {
+                id: '5',
+                title: 'Задача 1',
+                description: 'Текст задачи...',
+                startDate: '2026-02-10',
+                order: 0
+              }
+            ]
+          },
+          {
+            id: '3',
+            title: 'Выполнено',
+            order: 2,
+            tasks: []
+          }
+        ]
+      };
+      dispatch(addBoard(demoBoard));
     }
-  ]);
+  }, [boards.length, dispatch]);
 
+  const moveTask = useCallback((taskId: string, sourceColumnId: string, targetColumnId: string) =>
+    {
+      if (!currentBoard) 
+        return;
 
+      //сообщение в лог для отладки
+      console.log("moving task:", {taskId, sourceColumnId, targetColumnId});
 
-    // Функция перемещения задачи между колонками
-  const moveTask = useCallback((taskId: string, sourceColumnId: string, targetColumnId: string) => {
-    console.log('Moving task:', { taskId, sourceColumnId, targetColumnId });
-    
-    setColumns(prevColumns => {
-      // Находим исходную и целевую колонки
-      const sourceColumn = prevColumns.find(col => col.id === sourceColumnId);
-      const targetColumn = prevColumns.find(col => col.id === targetColumnId);
-      
-      if (!sourceColumn || !targetColumn) {
-        console.log('Column not found');
-        return prevColumns;
-      }
-      
-      // Находим задачу в исходной колонке
-      const taskIndex = sourceColumn.tasks.findIndex(t => t.id === taskId);
-      if (taskIndex === -1) {
-        console.log('Task not found');
-        return prevColumns;
-      }
-      
-      // Создаем копии массивов задач
-      const newSourceTasks = [...sourceColumn.tasks];
-      const [movedTask] = newSourceTasks.splice(taskIndex, 1);
-      
-      // Обновляем состояние
-      return prevColumns.map(col => {
-        if (col.id === sourceColumnId) {
-          return { ...col, tasks: newSourceTasks };
-        }
-        if (col.id === targetColumnId) {
-          return { ...col, tasks: [...col.tasks, movedTask] };
-        }
-        return col;
-      });
-    });
-  }, []);
+      const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
+      const task = sourceColumn?.tasks.find(tsk => tsk.id === taskId);
+
+      if (!task)
+        return;
+
+      // Сохраняем копию задачи для добавления
+      const taskToMove = { ...task };
+
+      // Обновляем порядок задачи для целевой колонки
+      const targetColumn = currentBoard.columns.find(col => col.id === targetColumnId);
+      taskToMove.order = targetColumn ? targetColumn.tasks.length : 0;
+
+      // Используем существующие редьюсеры
+      dispatch(removeTask({ 
+        boardId: currentBoard.id, 
+        columnId: sourceColumnId, 
+        taskId: taskId 
+      }));
+
+      dispatch(addTask({ 
+        boardId: currentBoard.id, 
+        columnId: targetColumnId, 
+        task: taskToMove 
+      }));
+
+      }, [currentBoard, dispatch])
+
 
   // Функция перемещения колонок
   const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
+    if (!currentBoard) 
+      return;
+
     console.log('Moving column:', { dragIndex, hoverIndex });
-    
-    setColumns(prevColumns => {
-      const newColumns = [...prevColumns];
-      const [removed] = newColumns.splice(dragIndex, 1);
-      newColumns.splice(hoverIndex, 0, removed);
-      
-      // Обновляем order для каждой колонки
-      return newColumns.map((col, index) => ({
-        ...col,
-        order: index
+
+    const newColumns = [...currentBoard.columns];
+    const [removed] = newColumns.splice(dragIndex, 1);
+    newColumns.splice(hoverIndex, 0, removed);
+
+    // Обновляем order для каждой колонки
+    newColumns.forEach((col, index) => {
+      dispatch(setColumn({ 
+        boardId: currentBoard.id, 
+        column: { ...col, order: index } 
       }));
     });
-  }, []);
+  }, [currentBoard, dispatch]);
 
-  
-return (
+  const updateTask = useCallback((columnId: string, updatedTask: Task) => {
+    if (!currentBoard) 
+      return;
+    
+    dispatch(setTask({
+      boardId: currentBoard.id,
+      columnId: columnId,
+      task: updatedTask
+    }));
+  }, [currentBoard, dispatch]);
+
+  if (!currentBoard) {
+    return <div>Кажется, доска до сих пор не выбрана...</div>;
+  }
+
+  return (
     <DndProvider backend={HTML5Backend}>
       <div className="App">
         <header>
           <h1 className="header-logo">Kan-do-it</h1>
           <nav>
-            <a>username</a>
+            <a>{currentBoard.owner}</a>
             <button name="log-out-btn">Выйти</button>
           </nav>
         </header>
@@ -128,16 +168,20 @@ return (
           <Sidebar />
           
           <div className="work-space">
+            <h2>{currentBoard.name}</h2>
             <div className="columns">
-              {columns
+              {currentBoard.columns
+                  .slice()
                   .sort((a, b) => (a.order || 0) - (b.order || 0))
                   .map((column, index) => (
                     <DraggableColumn
                       key={column.id}
-                      column={column}
-                      index={index}
-                      onMoveTask={moveTask}
-                      onMoveColumn={moveColumn}
+                    column={column}
+                    index={index}
+                    boardId={currentBoard.id}
+                    onMoveTask={moveTask}
+                    onMoveColumn={moveColumn}
+                    onUpdateTask={updateTask}
                     />
                   ))}
             </div>
