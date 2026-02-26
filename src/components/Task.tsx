@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useDrag } from 'react-dnd';
+import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Task as TaskType } from '../types';
+import { ItemTypes } from '../App';
 
 interface TaskProps {
   task: TaskType;
   columnId: string;
-  onDragStart: (e: React.DragEvent, taskId: string, columnId: string) => void;
 }
 
-const Task: React.FC<TaskProps> = ({ task, columnId, onDragStart }) => {
+const Task: React.FC<TaskProps> = ({ task, columnId }) => {
+  const [{ isDragging }, drag, preview] = useDrag(() => ({
+    type: ItemTypes.TASK,
+    item: { 
+      id: task.id, 
+      columnId: columnId,
+      type: ItemTypes.TASK,
+      task: task 
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+    // Добавляем логирование для отладки
+    end: (item, monitor) => {
+      const dropResult = monitor.getDropResult();
+      console.log('Drag ended:', { item, dropResult });
+    },
+  }), [task.id, columnId]);
+
+  // Скрываем стандартный призрак
+  useEffect(() => {
+    preview(getEmptyImage(), { captureDraggingState: true });
+  }, [preview]);
+
   const getTagClass = (tag?: string) => {
     if (tag === 'Без срока') return 'no-deadline';
     if (tag === 'Приоритетная задача') return 'high-priority';
@@ -16,9 +41,13 @@ const Task: React.FC<TaskProps> = ({ task, columnId, onDragStart }) => {
 
   return (
     <div 
-      className="task"
-      draggable
-      onDragStart={(e) => onDragStart(e, task.id, columnId)}
+      ref={drag}
+      className={`task ${isDragging ? 'dragging' : ''}`}
+      style={{ 
+        opacity: isDragging ? 0.3 : 1,
+        cursor: 'grab'
+      }}
+      onClick={() => console.log('Task clicked:', task.id)}
     >
       {task.tag && (
         <h3 className={`task-tag ${getTagClass(task.tag)}`}>

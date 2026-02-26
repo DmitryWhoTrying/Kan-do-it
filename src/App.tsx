@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
-import Column from './components/Column';
+import DraggableColumn from './components/DraggableColumn';
 import { Task, Column as ColumnType } from './types';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
+
+export const ItemTypes = {
+  TASK: 'task',
+  COLUMN: 'column'
+};
 
 function App() {
   const [columns, setColumns] = useState<ColumnType[]>([
@@ -48,99 +55,103 @@ function App() {
     }
   ]);
 
-  const handleDragStart = (e: React.DragEvent, taskId: string, sourceColumnId: string) => {
-    // It's good practice to set effectAllowed
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', JSON.stringify({
-      taskId,
-      sourceColumnId
-    }));
-  };
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    // Optional: e.dataTransfer.dropEffect = 'move';
-  };
 
-  const handleDrop = (e: React.DragEvent, targetColumnId: string) => {
-    e.preventDefault();
+    // Функция перемещения задачи между колонками
+  const moveTask = useCallback((taskId: string, sourceColumnId: string, targetColumnId: string) => {
+    console.log('Moving task:', { taskId, sourceColumnId, targetColumnId });
     
-    try {
-      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-      const { taskId, sourceColumnId } = data;
-
-      if (sourceColumnId === targetColumnId) return;
-
-      setColumns(prevColumns => {
-        // 1. Find the task to move
-        const sourceColumn = prevColumns.find(col => col.id === sourceColumnId);
-        const taskToMove = sourceColumn?.tasks.find(task => task.id === taskId);
-
-        if (!taskToMove) return prevColumns;
-
-        // 2. Return a completely new structure with new references
-        return prevColumns.map(col => {
-          if (col.id === sourceColumnId) {
-            // Remove task from source (create new tasks array)
-            return {
-              ...col,
-              tasks: col.tasks.filter(task => task.id !== taskId)
-            };
-          }
-          if (col.id === targetColumnId) {
-            // Add task to target (create new tasks array)
-            const newTasks = 
-                  taskToMove.priority === 'high' ? 
-                  [taskToMove, ...col.tasks] : [...col.tasks, taskToMove] 
-            return {
-              ...col,
-              tasks: newTasks
-            };
-          }
-          return col;
-        });
+    setColumns(prevColumns => {
+      // Находим исходную и целевую колонки
+      const sourceColumn = prevColumns.find(col => col.id === sourceColumnId);
+      const targetColumn = prevColumns.find(col => col.id === targetColumnId);
+      
+      if (!sourceColumn || !targetColumn) {
+        console.log('Column not found');
+        return prevColumns;
+      }
+      
+      // Находим задачу в исходной колонке
+      const taskIndex = sourceColumn.tasks.findIndex(t => t.id === taskId);
+      if (taskIndex === -1) {
+        console.log('Task not found');
+        return prevColumns;
+      }
+      
+      // Создаем копии массивов задач
+      const newSourceTasks = [...sourceColumn.tasks];
+      const [movedTask] = newSourceTasks.splice(taskIndex, 1);
+      
+      // Обновляем состояние
+      return prevColumns.map(col => {
+        if (col.id === sourceColumnId) {
+          return { ...col, tasks: newSourceTasks };
+        }
+        if (col.id === targetColumnId) {
+          return { ...col, tasks: [...col.tasks, movedTask] };
+        }
+        return col;
       });
-    } catch (error) {
-      console.error('Drop error:', error);
-    }
-  };
+    });
+  }, []);
 
-  return (
-    <div className="App">
-      <header>
-        <h1 className="header-logo">Kan-do-it</h1>
-        <nav>
-          <a>username</a>
-          <button name="log-out-btn">Выйти</button>
-        </nav>
-      </header>
+  // Функция перемещения колонок
+  const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
+    console.log('Moving column:', { dragIndex, hoverIndex });
+    
+    setColumns(prevColumns => {
+      const newColumns = [...prevColumns];
+      const [removed] = newColumns.splice(dragIndex, 1);
+      newColumns.splice(hoverIndex, 0, removed);
+      
+      // Обновляем order для каждой колонки
+      return newColumns.map((col, index) => ({
+        ...col,
+        order: index
+      }));
+    });
+  }, []);
 
-      <div className="main-div">
-        <Sidebar />
-        
-        <div className="work-space">
-          <div className="columns">
-            {columns.map(column => (
-              <Column
-                key={column.id}
-                column={column}
-                onDragStart={handleDragStart}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
-              />
-            ))}
+  
+return (
+    <DndProvider backend={HTML5Backend}>
+      <div className="App">
+        <header>
+          <h1 className="header-logo">Kan-do-it</h1>
+          <nav>
+            <a>username</a>
+            <button name="log-out-btn">Выйти</button>
+          </nav>
+        </header>
+
+        <div className="main-div">
+          <Sidebar />
+          
+          <div className="work-space">
+            <div className="columns">
+              {columns
+                  .sort((a, b) => (a.order || 0) - (b.order || 0))
+                  .map((column, index) => (
+                    <DraggableColumn
+                      key={column.id}
+                      column={column}
+                      index={index}
+                      onMoveTask={moveTask}
+                      onMoveColumn={moveColumn}
+                    />
+                  ))}
+            </div>
           </div>
         </div>
-      </div>
 
-      <footer>
-        <div>
-          Design, develop, test by @DmitryFromFIb. 2026
-        </div>
-      </footer>
-    </div>
+        <footer>
+          <div>
+            Design, develop, test by @DmitryFromFIb. 2026
+          </div>
+        </footer>
+      </div>
+    </DndProvider>
   );
 }
-
 
 export default App;

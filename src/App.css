@@ -270,3 +270,109 @@ footer div {
   width: 100%;
 } 
 
+/* Стили для drag-n-drop с react-dnd */
+.task.dragging {
+  opacity: 0.1;
+  transform: scale(0.98);
+  /* box-shadow: 0 5px 10px rgba(0,0,0,0.2); */
+}
+
+.column.drag-over {
+  background-color: rgba(51, 166, 76, 0.2);
+  border: 3px dashed #33A64C;
+  transition: background-color 0.4s;
+}
+
+/* Анимация появления задач */
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.task {
+  animation: slideIn 0.3s ease;
+}
+
+/* Добавьте в конец файла App.css */
+
+/* Стили для заголовка колонки */
+.column-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  cursor: grab;
+}
+
+.column-header:active {
+  cursor: grabbing;
+}
+
+/* Стили для ручки перетаскивания */
+.drag-handle {
+  font-size: 20px;
+  color: #666;
+  padding: 0 5px;
+  cursor: grab;
+  user-select: none;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+
+.drag-handle:hover {
+  opacity: 1;
+}
+
+.column-header:active .drag-handle {
+  cursor: grabbing;
+}
+
+/* Стили для перетаскивания колонок */
+.column-dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+
+/* Анимация перемещения колонок */
+.columns {
+  transition: all 0.3s ease;
+}
+
+.column {
+  transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Улучшенные стили для drag-over */
+.column.drag-over {
+  background-color: rgba(51, 166, 76, 0.15);
+  border: 3px dashed #33A64C;
+  transform: scale(1.02);
+  box-shadow: 0 0 0 4px rgba(51, 166, 76, 0.3);
+}
+
+/* Контейнер для задач в колонке */
+.column-tasks {
+  min-height: 50px;
+  transition: background-color 0.2s;
+}
+
+/* Стили для пустой колонки */
+.column-tasks:empty::before {
+  content: "Перетащите задачу сюда";
+  display: block;
+  color: #999;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  border: 2px dashed #ccc;
+  border-radius: 10px;
+  margin: 10px 0;
+}
