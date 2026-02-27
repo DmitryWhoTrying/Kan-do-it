@@ -106,7 +106,7 @@ function App() {
       dispatch(removeTask({ 
         boardId: currentBoard.id, 
         columnId: sourceColumnId, 
-        taskId: taskId 
+        taskId: task.id 
       }));
 
       dispatch(addTask({ 
@@ -115,6 +115,8 @@ function App() {
         task: taskToMove 
       }));
 
+      console.log("борды из стора", boards)
+      console.log('борда текущая', currentBoard)
       }, [currentBoard, dispatch])
 
 

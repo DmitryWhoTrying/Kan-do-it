@@ -32,7 +32,7 @@ const boardsSlice = createSlice({
         },
         
         removeBoard:(state, action : PayloadAction<{boardId : string}>) =>{
-            state.boards.filter(brd => brd.id !== action.payload.boardId);
+            state.boards = state.boards.filter(brd => brd.id !== action.payload.boardId);
         },
 
         //Экшен новой колонки
@@ -48,6 +48,7 @@ const boardsSlice = createSlice({
             const editColumn = state.boards.find( 
                 board => board.id === action.payload.boardId)?.
                 columns.find(col => col.id === action.payload.column.id);   
+                
             if (editColumn)
             {
                 editColumn.order = action.payload.column.order;
@@ -58,8 +59,10 @@ const boardsSlice = createSlice({
 
         removeColumn: (state, action: PayloadAction<{boardId : string; columnId : string}>) =>
         {
-            state.boards.find(brd=> brd.id === action.payload.boardId)?.
-                    columns.filter(col => col.id !== action.payload.columnId);
+            const boardToFilter = state.boards.find(brd=> brd.id === action.payload.boardId);
+
+            if (boardToFilter)
+                boardToFilter.columns = boardToFilter?.columns.filter(col => col.id !== action.payload.columnId); 
         }, 
 
         //Экшен новой задачи
@@ -91,10 +94,12 @@ const boardsSlice = createSlice({
 
         removeTask: (state, action: PayloadAction<{boardId : string; columnId : string, taskId : string}>) =>
         {
-            const editTask = state.boards.find( 
-                board => board.id === action.payload.boardId)?.
-                columns.find(col => col.id === action.payload.columnId)?.
-                tasks.filter(tsk => tsk.id !== action.payload.taskId);   
+            const columnToFilter = state.boards.find(
+                brd => brd.id === action.payload.boardId
+            )?.columns.find(col => col.id === action.payload.columnId);
+            
+            if (columnToFilter)
+                columnToFilter.tasks = columnToFilter.tasks.filter(tsk => tsk.id !== action.payload.taskId)
         }
     }
 });
