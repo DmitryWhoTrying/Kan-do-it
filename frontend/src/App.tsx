@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import './App.css';
 import Sidebar from './components/Sidebar';
 import DraggableColumn from './components/DraggableColumn';
-import { Task, Column as ColumnType, Board } from './types';
+import { Task as TaskType, Column as ColumnType, Board, Task } from '../../shared/types';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAppDispatch, useAppSelector } from './store/hooks';
@@ -89,8 +89,8 @@ function App() {
       //сообщение в лог для отладки
       console.log("moving task:", {taskId, sourceColumnId, targetColumnId});
 
-      const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
-      const task = sourceColumn?.tasks.find(tsk => tsk.id === taskId);
+      const sourceColumn = currentBoard.columns.find((col: { id: string; }) => col.id === sourceColumnId);
+      const task = sourceColumn?.tasks.find((tsk: { id: string; }) => tsk.id === taskId);
 
       if (!task)
         return;
@@ -99,7 +99,7 @@ function App() {
       const taskToMove = { ...task };
 
       // Обновляем порядок задачи для целевой колонки
-      const targetColumn = currentBoard.columns.find(col => col.id === targetColumnId);
+      const targetColumn = currentBoard.columns.find((col: { id: string; }) => col.id === targetColumnId);
       taskToMove.order = targetColumn ? targetColumn.tasks.length : 0;
 
       // Используем существующие редьюсеры
@@ -205,8 +205,8 @@ const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
             <div className="columns">
               {currentBoard.columns
                   .slice()
-                  .sort((a, b) => (a.order || 0) - (b.order || 0))
-                  .map((column, index) => (
+                  .sort((a: ColumnType, b: ColumnType) => (a.order || 0) - (b.order || 0))
+                  .map((column: ColumnType, index: number) => (
                     <DraggableColumn
                       key={column.id}
                     column={column}

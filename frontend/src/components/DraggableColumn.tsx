@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import { Column as ColumnType, Task as TaskType } from '../types';
+import { Column as ColumnType, Task as TaskType } from '../../../shared/types';
 import Task from './Task';
 import { ItemTypes } from '../App';
 import { setColumn  } from '../store/boardSlice';

@@ -1,6 +1,5 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import '../types';
-import { Board, Column, Task } from '../types';
+import { Board, Column, Task } from '../../../shared/types';
 
 interface boardsState{
     boards: Board[];
@@ -54,7 +53,7 @@ const boardsSlice = createSlice({
         {
             const editColumn = state.boards.find( 
                 board => board.id === action.payload.boardId)?.
-                columns.find(col => col.id === action.payload.column.id);   
+                columns.find((col: { id: any; }) => col.id === action.payload.column.id);   
 
             if (editColumn)
             {
@@ -87,7 +86,7 @@ const boardsSlice = createSlice({
         {
             state.boards.find( 
                 board => board.id === action.payload.boardId)?.
-                columns.find(col => col.id === action.payload.columnId)?.
+                columns.find((col: { id: string; }) => col.id === action.payload.columnId)?.
                 tasks.push(action.payload.task);  
         },
 
@@ -113,10 +112,10 @@ const boardsSlice = createSlice({
         {
             const columnToFilter = state.boards.find(
                 brd => brd.id === action.payload.boardId
-            )?.columns.find(col => col.id === action.payload.columnId);
+            )?.columns.find((col: { id: string; }) => col.id === action.payload.columnId);
             
             if (columnToFilter)
-                columnToFilter.tasks = columnToFilter.tasks.filter(tsk => tsk.id !== action.payload.taskId)
+                columnToFilter.tasks = columnToFilter.tasks.filter((tsk: { id: string; }) => tsk.id !== action.payload.taskId)
         }
     }
 });
