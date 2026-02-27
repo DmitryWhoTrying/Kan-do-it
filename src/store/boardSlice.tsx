@@ -48,12 +48,22 @@ const boardsSlice = createSlice({
             const editColumn = state.boards.find( 
                 board => board.id === action.payload.boardId)?.
                 columns.find(col => col.id === action.payload.column.id);   
-                
+
             if (editColumn)
             {
                 editColumn.order = action.payload.column.order;
                 editColumn.tasks = action.payload.column.tasks;
                 editColumn.title = action.payload.column.title;          
+            }
+        },
+
+        setColumnOrder:(state, action: PayloadAction<{boardId: string; columnsToSet : Column[]}>)=>
+        {
+            const board = state.boards.find(brd => brd.id === action.payload.boardId);
+
+            if (board)
+            {
+                board.columns = action.payload.columnsToSet;                
             }
         },
 
@@ -107,8 +117,8 @@ const boardsSlice = createSlice({
 
 export const {
     addTask, setTask, removeTask, 
-    addColumn, setColumn, removeColumn,
-    addBoard, setBoard, removeBoard 
+    addColumn, setColumn, removeColumn, setColumnOrder,
+    addBoard, setBoard, removeBoard,
 } = boardsSlice.actions;
 
 export default boardsSlice.reducer;

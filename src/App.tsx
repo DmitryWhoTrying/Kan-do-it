@@ -6,7 +6,7 @@ import { Task, Column as ColumnType, Board } from './types';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { addBoard, addTask, removeColumn, removeTask, setColumn, setTask } from './store/boardSlice';
+import { addBoard, addTask, removeColumn, setColumnOrder, removeTask, setColumn, setTask } from './store/boardSlice';
 
 
 export const ItemTypes = {
@@ -120,25 +120,33 @@ function App() {
       }, [currentBoard, dispatch])
 
 
-  // Функция перемещения колонок
-  const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
-    if (!currentBoard) 
-      return;
+// Функция перемещения колонок
+const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
+  if (!currentBoard) return;
 
-    console.log('Moving column:', { dragIndex, hoverIndex });
+  console.log('Moving column from', dragIndex, 'to', hoverIndex);
 
-    const newColumns = [...currentBoard.columns];
-    const [removed] = newColumns.splice(dragIndex, 1);
-    newColumns.splice(hoverIndex, 0, removed);
+    const sortedColumns = [...currentBoard.columns].sort((a, b) => 
+    (a.order || 0) - (b.order || 0)
+  );
 
-    // Обновляем order для каждой колонки
-    newColumns.forEach((col, index) => {
-      dispatch(setColumn({ 
-        boardId: currentBoard.id, 
-        column: { ...col, order: index } 
-      }));
-    });
-  }, [currentBoard, dispatch]);
+  //новый массив, старая в отдельный слот
+  const newColumns = [...currentBoard.columns];
+  const [removedColumn] = newColumns.splice(dragIndex, 1);
+  
+  // Вставляем на новое место
+  newColumns.splice(hoverIndex, 0, removedColumn);
+
+  // Обновляем order и диспатчим ОДИН раз
+  const updatedColumns = newColumns.map((col, idx) => ({ ...col, order: idx }));
+  
+  dispatch(setColumnOrder({ 
+    boardId: currentBoard.id, 
+    columnsToSet: updatedColumns 
+  }));  
+
+}, [currentBoard, dispatch]);
+
 
   const updateTask = useCallback((columnId: string, updatedTask: Task) => {
     if (!currentBoard) 

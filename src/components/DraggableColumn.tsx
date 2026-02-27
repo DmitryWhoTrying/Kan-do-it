@@ -77,8 +77,8 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
 
         const hoverBoundingRect = columnRef.current.getBoundingClientRect();
         const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
-        const clientOffset = monitor.getClientOffset();
         
+        const clientOffset = monitor.getClientOffset();
         if (!clientOffset) return;
         
         const hoverClientX = clientOffset.x - hoverBoundingRect.left;
