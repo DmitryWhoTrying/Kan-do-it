@@ -30,6 +30,13 @@ const boardsSlice = createSlice({
                 curBoard.users = action.payload.board.users;
             }
         },
+
+        setBoardName: (state, action : PayloadAction<{boardId : string, boardName : string}>) => {
+            const board = state.boards.find(brd => brd.id === action.payload.boardId);
+
+            if (board)
+                board.name = action.payload.boardName;
+        },
         
         removeBoard:(state, action : PayloadAction<{boardId : string}>) =>{
             state.boards = state.boards.filter(brd => brd.id !== action.payload.boardId);
@@ -118,7 +125,7 @@ const boardsSlice = createSlice({
 export const {
     addTask, setTask, removeTask, 
     addColumn, setColumn, removeColumn, setColumnOrder,
-    addBoard, setBoard, removeBoard,
+    addBoard, setBoard, removeBoard, setBoardName
 } = boardsSlice.actions;
 
 export default boardsSlice.reducer;

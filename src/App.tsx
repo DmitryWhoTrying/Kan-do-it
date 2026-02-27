@@ -6,7 +6,7 @@ import { Task, Column as ColumnType, Board } from './types';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { useAppDispatch, useAppSelector } from './store/hooks';
-import { addBoard, addTask, removeColumn, setColumnOrder, removeTask, setColumn, setTask } from './store/boardSlice';
+import { addBoard, addTask, setBoardName, removeColumn, setColumnOrder, removeTask, setColumn, setTask, setBoard } from './store/boardSlice';
 
 
 export const ItemTypes = {
@@ -137,7 +137,7 @@ const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
   // Вставляем на новое место
   newColumns.splice(hoverIndex, 0, removedColumn);
 
-  // Обновляем order и диспатчим ОДИН раз
+  // Обновляем order и диспатчим
   const updatedColumns = newColumns.map((col, idx) => ({ ...col, order: idx }));
   
   dispatch(setColumnOrder({ 
@@ -159,6 +159,23 @@ const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
     }));
   }, [currentBoard, dispatch]);
 
+  const updateBoard = useCallback((updatedBoard: Board)=> {
+    if (!currentBoard)
+      return;
+
+    dispatch(setBoard({board: updatedBoard}))
+  }, [currentBoard, dispatch])
+
+  const handleBoardTitleChange = (newBoardName: string) =>{
+      if (!currentBoard)
+        return;
+
+      dispatch(setBoardName(
+        {boardId: currentBoard.id,
+         boardName: newBoardName
+        }))
+    }
+
   if (!currentBoard) {
     return <div>Кажется, доска до сих пор не выбрана...</div>;
   }
@@ -178,7 +195,13 @@ const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
           <Sidebar />
           
           <div className="work-space">
-            <h2>{currentBoard.name}</h2>
+            <h2 
+              className="table-title-h2"
+              contentEditable
+              suppressContentEditableWarning
+              onBlur={(e)=> handleBoardTitleChange(e.currentTarget.textContent || currentBoard.name)}
+            >{currentBoard.name}</h2>
+
             <div className="columns">
               {currentBoard.columns
                   .slice()
