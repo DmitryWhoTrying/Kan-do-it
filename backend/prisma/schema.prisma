@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Column{
+  id          Int @id @default(autoincrement())
+  title       String
+  tasks       Task[]
+  order       Int
+  board       Board @relation(fields: [boardId], references: [id])
+  boardId     Int
+}
+
+model Task{
+  id          Int      @id @default(autoincrement()) 
+  title       String   
+  description String?
+  startDate   DateTime
+  endDate     DateTime?
+  tag         String
+  Column      Column? @relation(fields: [columnId], references: [id])
+  columnId    Int?
+  order       Int
+}
+
+model BoardUser{
+  userId          Int
+  user            User @relation(fields: [userId], references: [id])
+
+  boardId         Int
+  board           Board @relation(fields: [boardId], references: [id])
+
+  permission  Permission
+
+  @@id([userId])
+}
+
+model User{
+  id          Int @id @default(autoincrement())
+  name        String
+  boardUsers  BoardUser[] 
+}
+
+model Board{
+  id          Int @id @default(autoincrement())
+  name        String
+  users       BoardUser[]
+  columns     Column[]
+}
+
+enum Permission {
+  EDIT
+  DRAG_N_DROP
+  VIEW_ONLY
+  OWNER
+}

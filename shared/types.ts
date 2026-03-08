@@ -1,5 +1,5 @@
 export interface Task {
-  id: string;
+  id: number;
   title: string;
   description: string;
   priority?: 'high' | 'medium' | 'low';
@@ -10,20 +10,20 @@ export interface Task {
 }
 
 export interface Column {
-  id: string;
+  id: number;
   title: string;
   tasks: Task[];
   order?: number;
 }
 
 export interface User{
-  id: string;
+  id: number;
   name: string;
   permission: 'edit' | 'drag-n-drop' | 'view-only';
 }
 
 export interface Board{
-  id: string;
+  id: number;
   name: string
   owner: string;
   users: string[];
