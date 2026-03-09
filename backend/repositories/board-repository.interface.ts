@@ -7,7 +7,7 @@ export interface IBoardRepository{
     findByOwner(ownerId: number): Promise<Board[] | null>;
 
     create(board: Omit<Board, 'id' | 'createdAt'>): Promise<Board>;
-    update(id: string, data: Partial<Board>): Promise<Board | null>;
-    delete(id: string): Promise<boolean>;
+    update(id: number, data: Partial<Board>): Promise<Board | null>;
+    delete(id: number): Promise<boolean>;
     findAll(): Promise<Board[]>;
 }

@@ -1,8 +1,9 @@
 import {Task as PrismaTask} from "../generated/prisma/client.ts"
 import {Task} from '../../shared/types.ts'
+import { IMapper } from "./mapper.interface.ts";
 
-export class TaskMapper {
-  static toDomain(prismaTask: PrismaTask): Task {
+export class TaskMapper implements IMapper<Task, PrismaTask>{
+  toDomain(prismaTask: PrismaTask): Task {
     return {
       id: prismaTask.id,
       title: prismaTask.title,
@@ -14,7 +15,7 @@ export class TaskMapper {
     };
   }
 
-  static toDomainMany(prismaTasks: PrismaTask[]): Task[] {
+  toDomainMany(prismaTasks: PrismaTask[]): Task[] {
     return prismaTasks.map(task => this.toDomain(task));
   }
 }
