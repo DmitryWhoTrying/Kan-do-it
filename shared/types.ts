@@ -2,8 +2,7 @@ export interface Task {
   id: number;
   title: string;
   description: string;
-  priority?: 'high' | 'medium' | 'low';
-  startDate?: string;
+  startDate: string;
   endDate?: string;
   tag?: string;
   order?: number;
@@ -19,13 +18,17 @@ export interface Column {
 export interface User{
   id: number;
   name: string;
-  permission: 'edit' | 'drag-n-drop' | 'view-only';
 }
 
 export interface Board{
   id: number;
   name: string
-  owner: string;
-  users: string[];
+  users: BoardUser[];
   columns: Column[];
+}
+
+export interface BoardUser{
+  board: Board;
+  user: User;
+  permission: 'edit' | 'drag-n-drop' | 'view-only' | 'owner';
 }
