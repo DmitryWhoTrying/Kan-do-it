@@ -1,8 +1,10 @@
-import {Board as PrismaBoard, Permission as PrismaPermission, BoardUser as PrismaBoardUser, User as PrismaUser} from "../generated/prisma/client"
-import {BoardUser, User, Board} from "../../shared/types"
-import { IMapper } from "./mapper.interface"
-import { BoardMapper } from "./boardMapper";
-import { UserMapper } from "./userMapper";
+import {Board as PrismaBoard, Permission as PrismaPermission, BoardUser as PrismaBoardUser, User as PrismaUser} from "../generated/prisma/client.ts"
+import {BoardUser, User, Board} from "../../shared/types.ts"
+import { IMapper } from "./Mapper.interface.ts"
+import { BoardMapper } from "./BoardMapper.ts"
+import { UserMapper } from "./userMapper.ts";
+
+type BoardUserWithUser = PrismaBoardUser & { user: PrismaUser };
 
 export class BoardUserMapper implements IMapper<BoardUser, PrismaBoardUser>{
     // Маппинг enum Prisma → ваш интерфейс
@@ -15,21 +17,17 @@ export class BoardUserMapper implements IMapper<BoardUser, PrismaBoardUser>{
         };
         return map[prismaPerm];
     }
-    
-    toDomain(prismaBoardUser: PrismaBoardUser & {prismaBoard : PrismaBoard, prismaUser: PrismaUser}): BoardUser {
-        if (!prismaBoardUser.prismaUser){
-            throw new Error("Cannot convert to domain, user was null");
-        }
-        if (!prismaBoardUser.prismaBoard){
-            throw new Error("Cannot convert to domain, board was null");
-        }
-        return {
-            permission: BoardUserMapper.mapPermission(prismaBoardUser.permission),
-            user:   new UserMapper().toDomain(prismaBoardUser.prismaUser),
-            board: new BoardMapper().toDomain(prismaBoardUser.prismaBoard)
-        }
+
+    toDomain(prismaBoardUser: BoardUserWithUser): BoardUser {
+    return {
+      boardId: prismaBoardUser.boardId,
+      userId: prismaBoardUser.userId,
+      // Опционально добавляем имя пользователя, если оно подгружено
+      userName: prismaBoardUser.user?.name,
+      permission:   BoardUserMapper.mapPermission(prismaBoardUser.permission),
+    };
     }
-    toDomainMany(prismaBoardUser: (PrismaBoardUser & {prismaBoard : PrismaBoard, prismaUser: PrismaUser})[]): BoardUser[] {
-        return prismaBoardUser.map(BU => this.toDomain(BU));
+    toDomainMany(prismaBoardUsers: BoardUserWithUser[]): BoardUser[] {
+    return prismaBoardUsers.map(bu => this.toDomain(bu));
     }
 }

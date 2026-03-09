@@ -1,6 +1,6 @@
 import {User as PrismaUser} from "../generated/prisma/client.ts"
 import {User} from '../../shared/types.ts'
-import { IMapper } from "./mapper.interface.ts";
+import { IMapper } from "./Mapper.interface.ts";
 
 export class UserMapper implements IMapper<User, PrismaUser>{
     toDomain(prismaUser: PrismaUser): User {

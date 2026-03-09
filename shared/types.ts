@@ -28,7 +28,8 @@ export interface Board{
 }
 
 export interface BoardUser{
-  board: Board;
-  user: User;
+  boardId: number;
+  userId: number;
+  userName?: string;
   permission: 'edit' | 'drag-n-drop' | 'view-only' | 'owner';
 }

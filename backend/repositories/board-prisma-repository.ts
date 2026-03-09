@@ -1,27 +1,29 @@
 import { PrismaClient } from '../generated/prisma/client';
 import { IBoardRepository } from "./board-repository.interface";
 import { Board } from "../../shared/types";
+import { BoardMapper } from '../mappers/BoardMapper';
 
 export class PrimaBoardRepository implements IBoardRepository{
     constructor(private prisma: PrismaClient){}
 
     async findById(id: number): Promise<Board | null> {
-        throw new Error("Method not implemented.");
-
+        //throw new Error("Method not implemented.");
         const prismaBoard = await this.prisma.board.findUnique({
             where: { id },
             include: {
-                users: { include: { user: true } }, // если нужны данные пользователей
-                columns: {
-                    include: {tasks: true},
-                    orderBy: { order: 'asc' }
-                }
+            users: { 
+                include: { user: true } 
+            },
+            columns: {
+                include: {tasks: true},
+                orderBy: { order: 'asc' }
+            }
             }
         });
         if (!prismaBoard)
             return null;
         
-        //return prismaBoard;
+        return new BoardMapper().toDomain(prismaBoard);
     }
     async findByName(name: string): Promise<Board | null> {
         throw new Error("Method not implemented.");

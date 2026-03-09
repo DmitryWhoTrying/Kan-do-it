@@ -1,6 +1,6 @@
 import {Task as PrismaTask} from "../generated/prisma/client.ts"
 import {Task} from '../../shared/types.ts'
-import { IMapper } from "./mapper.interface.ts";
+import { IMapper } from "./Mapper.interface.ts";
 
 export class TaskMapper implements IMapper<Task, PrismaTask>{
   toDomain(prismaTask: PrismaTask): Task {

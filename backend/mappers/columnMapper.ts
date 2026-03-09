@@ -1,7 +1,9 @@
 import {Prisma, Column as PrismaColumn} from "../generated/prisma/client.ts"
 import {Column} from '../../shared/types.ts'
-import { IMapper } from "./mapper.interface.ts";
 import { TaskMapper } from "./taskMapper.ts";
+import { IMapper } from "./Mapper.interface.ts";
+
+export type ColumnWithTasks = PrismaColumn & {tasks?: any[]};
 
 export class ColumnMapper implements IMapper<Column, PrismaColumn>{
     toDomain(prismaColumn: PrismaColumn & { tasks?: any[] }): Column {
