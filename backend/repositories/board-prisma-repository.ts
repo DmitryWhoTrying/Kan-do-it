@@ -1,7 +1,10 @@
-import { PrismaClient } from '../generated/prisma/client';
+import { PrismaClient, Permission } from '../generated/prisma/client';
 import { IBoardRepository } from "./board-repository.interface";
 import { Board } from "../../shared/types";
-import { BoardMapper } from '../mappers/BoardMapper';
+import { BoardMapper } from '../mappers/boardMapper';
+import { PureComponent } from 'react';
+import { BoardUserMapper } from '../mappers/boardUserMapper';
+
 
 export class PrimaBoardRepository implements IBoardRepository{
     constructor(private prisma: PrismaClient){}
@@ -25,25 +28,113 @@ export class PrimaBoardRepository implements IBoardRepository{
         
         return new BoardMapper().toDomain(prismaBoard);
     }
-    async findByName(name: string): Promise<Board | null> {
-        throw new Error("Method not implemented.");
+    async findByName(boardName: string): Promise<Board[] | null> {
+        const prismaBoards = await this.prisma.board.findMany(
+            {
+                where: {name: boardName},
+                include: {
+                    users:{
+                        include: {user: true}
+                    },
+                    columns:{
+                        include: {tasks: true},
+                        orderBy: {order: 'asc'}
+                    }
+                }
+            }
+        );
+        if (!prismaBoards)
+            return null;
+        
+        return new BoardMapper().toDomainMany(prismaBoards);
     }
+
+
     async findByUser(userId: number): Promise<Board[] | null> {
+        const prismaBoards = await this.prisma.board.findMany(
+            {
+                where:{
+                    users: {
+                        some:{
+                            userId: userId
+                        }
+                    }
+                },
+                include: {
+                    users:{
+                        include: {user: true}
+                    },
+                    columns:{
+                        include: {tasks: true},
+                        orderBy: {order: 'asc'}
+                    }
+                }
+            }
+        );
+        
+        if (!prismaBoards)
+            return null;
+
+        return new BoardMapper().toDomainMany(prismaBoards);
+    }
+
+    async findByOwner(ownerId: number): Promise<Board[] | null> {
+        
+        const prismaBoards = await this.prisma.board.findMany({
+            where:{
+                users:{
+                    some:{
+                        userId: ownerId,
+                        permission: Permission.OWNER
+                    }
+                }
+            },
+                include: {
+                    users:{
+                        include: {user: true}
+                    },
+                    columns:{
+                        include: {tasks: true},
+                        orderBy: {order: 'asc'}
+                    }
+                }
+        });
+
+        if (!prismaBoards)
+            return null;
+
+        return new BoardMapper().toDomainMany(prismaBoards);
+    }
+    
+    async create(board: Omit<Board, "id" | "createdAt">): Promise<Board> {
+        try{
+            const prismaBoard = this.prisma.board.create({
+                data:{
+                    name: board.name,
+                    users: {
+                        create: board.users.map(usr =>({
+                            userId: usr.userId,
+                            user: usr.userName,
+                            permission: BoardUserMapper.mapPrismaPermission(usr.permission)
+                        }))
+                    }
+                }
+            });
+            
+            return new BoardMapper().toDomain(await prismaBoard);
+        }
+        catch (ex){
+            console.log("unexpected error", ex);
+            throw ex;
+        }
+    }
+    async update(id: number, data: Partial<Board>): Promise<Board | null> {
         throw new Error("Method not implemented.");
     }
-    findByOwner(ownerId: number): Promise<Board[] | null> {
+    async delete(id: number): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
-    create(board: Omit<Board, "id" | "createdAt">): Promise<Board> {
-        throw new Error("Method not implemented.");
-    }
-    update(id: number, data: Partial<Board>): Promise<Board | null> {
-        throw new Error("Method not implemented.");
-    }
-    delete(id: number): Promise<boolean> {
-        throw new Error("Method not implemented.");
-    }
-    findAll(): Promise<Board[]> {
+    async findAll(): Promise<Board[]> {
         throw new Error("Method not implemented.");
     }
     

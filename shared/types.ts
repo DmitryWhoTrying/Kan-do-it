@@ -33,3 +33,7 @@ export interface BoardUser{
   userName?: string;
   permission: 'edit' | 'drag-n-drop' | 'view-only' | 'owner';
 }
+
+export enum Permission{
+  'edit', 'drag-n-drop', 'view-only', 'owner'
+}
