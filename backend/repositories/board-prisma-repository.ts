@@ -1,4 +1,4 @@
-import { PrismaClient, Permission } from '../generated/prisma/client';
+import { PrismaClient, Permission, Prisma } from '../generated/prisma/client';
 import { IBoardRepository } from "./board-repository.interface";
 import { Board } from "../../shared/types";
 import { BoardMapper } from '../mappers/boardMapper';
@@ -129,13 +129,88 @@ export class PrimaBoardRepository implements IBoardRepository{
         }
     }
     async update(id: number, data: Partial<Board>): Promise<Board | null> {
-        throw new Error("Method not implemented.");
+        try{
+            const updateData: Prisma.BoardUpdateInput={
+                name: data.name,
+            };
+
+            if (data.users){
+                updateData.users = {
+                    deleteMany:{},
+                    create: data.users.map(usr => ({
+                        userId: usr.userId,
+                        user: {connect: {id: usr.userId}},
+                        permission: BoardUserMapper.mapPrismaPermission(usr.permission),
+                    })),
+                }
+            };
+
+            if (data.columns){
+                updateData.columns = {
+                    deleteMany: {},
+                    create: data.columns.map(col => ({
+                        title: col.title,
+                        order: col.order ?? 0,
+                        taks:{
+                            create: col.tasks.map(task=>({
+                                title: task.title,
+                                description: task.description,
+                                startDate: new Date(task.startDate),
+                                endDate: task.endDate ? new Date(task.endDate) : null,
+                                tag: task.tag ?? "",
+                                order: task.order ?? 0,
+                            }))
+                        }
+                    }))
+                }
+            }
+
+            const prismaBoard = await this.prisma.board.update({
+                where: {id},
+                data: updateData,
+                include:{
+                    users: {include: {user:true}},
+                    columns:{
+                        include: {tasks: true},
+                        orderBy: {order: 'asc'},
+                    }
+                }
+            })
+            
+            return new BoardMapper().toDomain(await prismaBoard);
+        }
+        catch (ex){
+            if ((ex as any).code === 'P2025') {
+            return null;
+        }
+        console.error('Unexpected error during board update', ex);
+        throw ex;
+        }
     }
     async delete(id: number): Promise<boolean> {
-        throw new Error("Method not implemented.");
+        const deleteBoard = await this.prisma.board.delete({
+            where: {
+                id: id
+            }
+        });
+        if (deleteBoard)
+            return true;
+        return false;
     }
+
     async findAll(): Promise<Board[]> {
-        throw new Error("Method not implemented.");
+        const prismaBoards = await this.prisma.board.findMany({
+            include: {
+                    users:{
+                        include: {user: true}
+                    },
+                    columns:{
+                        include: {tasks: true},
+                        orderBy: {order: 'asc'}
+                    }
+                }
+        });
+
+        return new BoardMapper().toDomainMany(prismaBoards);
     }
-    
 }
