@@ -7,9 +7,27 @@ import { IColumnRepository } from "./column-repository.interface";
 export class ColumnPrismaRepository implements IColumnRepository{
     constructor(private prisma: PrismaClient){};
 
-    async create(columns: Omit<Column, "id" | "createdAt">): Promise<Column> {
-        throw new Error("Method not implemented.");
+    async create(columns: Omit<Column, "id" | "createdAt">, boardId: number): Promise<Column> {
+        const prismaColumn = await this.prisma.column.create({
+            data:{
+                title: columns.title,
+                order: columns.order ?? 0,
+                tasks: {create: columns.tasks.map(task=>({
+                                title: task.title,
+                                description: task.description,
+                                startDate: new Date(task.startDate),
+                                endDate: task.endDate ? new Date(task.endDate) : null,
+                                tag: task.tag ?? "",
+                                order: task.order ?? 0,
+                            }))
+                },
+                boardId: boardId
+            }
+        })
+
+        return new ColumnMapper().toDomain(prismaColumn);
     }
+
     async update(columnID: number, data: Partial<Column>): Promise<Column | null> {
         const updateData: Prisma.ColumnUpdateInput={
             title: data.title,
@@ -66,5 +84,17 @@ export class ColumnPrismaRepository implements IColumnRepository{
             return [];
 
         return new ColumnMapper().toDomainMany(prismaColumns);
+    }
+
+    async find(columnID: number): Promise<Column | null>{
+        const prismaColumn = await this.prisma.column.findUnique({
+            where:{id: columnID},
+            include:{tasks: true}
+        })
+        
+        if (!prismaColumn)
+            return null;
+        
+        return new ColumnMapper().toDomain(prismaColumn);
     }
 }

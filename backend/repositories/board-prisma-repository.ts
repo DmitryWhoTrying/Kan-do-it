@@ -6,7 +6,7 @@ import { PureComponent } from 'react';
 import { BoardUserMapper } from '../mappers/boardUserMapper';
 
 
-export class PrimaBoardRepository implements IBoardRepository{
+export class PrismaBoardRepository implements IBoardRepository{
     constructor(private prisma: PrismaClient){}
 
     async findById(id: number): Promise<Board | null> {

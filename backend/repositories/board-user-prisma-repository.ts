@@ -24,6 +24,21 @@ export class PrimaBoardUserRepository implements IboardUserRepository{
         return new BoardUserMapper().toDomainMany(prismaBoardUsers);
     }
 
+    async findByUser(userID: number): Promise<BoardUser[] | null> {
+        const prismaBoardUsers = await this.prisma.boardUser.findMany({
+            where:
+            {
+                userId: userID
+            },
+            include:
+            {
+                user: true
+            }
+        });
+
+        return new BoardUserMapper().toDomainMany(prismaBoardUsers);
+    }
+
 
     async create(boardUser: Omit<BoardUser, 'id' | 'createdAt'>): Promise<BoardUser> {
         const prismaBoardUser = await this.prisma.boardUser.create({

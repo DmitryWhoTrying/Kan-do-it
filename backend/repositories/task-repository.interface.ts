@@ -5,6 +5,5 @@ export interface ITaskRepository{
     update(taskID: number, data: Partial<Task>, columnId: number): Promise<Task | null>;
     delete(taskID: number): Promise<boolean>;
     findAll(): Promise<Task[]>;
-    
     find(taskID: number): Promise<Task | null>;
 }
