@@ -1,7 +1,5 @@
 import {IBoardRepository} from "../repositories/board-repository.interface"
-import {PrismaBoardRepository} from "../repositories/board-prisma-repository"
-import {Server} from "../node_modules/socket.io"
-import { promises } from "node:dns"
+import {Server} from "socket.io"
 import { Board } from "../../shared/types";
 
 export class BoardService{
