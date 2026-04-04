@@ -1,5 +1,6 @@
 import {Request, Response} from 'express';
 import {BoardService} from '../service/board-service'
+import { ClientToServerEvents, ServerToClientEvets } from '../../shared/socket-events.types';
 
 export class BoardController{
     constructor(private boardService: BoardService){}

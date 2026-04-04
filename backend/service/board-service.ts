@@ -1,11 +1,9 @@
 import {IBoardRepository} from "../repositories/board-repository.interface"
-import {Server} from "socket.io"
 import { Board } from "../../shared/types";
 
 export class BoardService{
     constructor(
         private boardRepository: IBoardRepository,
-        private io: Server
     ){};
 
     async getAllBoards(){
@@ -26,22 +24,31 @@ export class BoardService{
 
     async createBoard(data: Board){
         const board = await this.boardRepository.create(data);
-        this.io.emit('board:created', board);
         return board;
     }
 
     async updateBoard(data: Partial<Board>, boardId: number){
         const board = await this.boardRepository.update(boardId, data);
-        this.io.emit('board:updated', board);
         return board;
     }
 
     async deleteBoard(boardId: number){
         const board = await this.boardRepository.delete(boardId);
-        if (board)
-            this.io.emit('board:deleted', {boardId});
-        else
-            this.io.emit('board:delete error');
         return board;
+    }
+
+    async checkUserAccess(boardId: number, userId: number){
+        const boardUsers = await this.boardRepository.findById(boardId);
+        if (boardUsers?.users.find(bu => {bu.userId === userId}))
+            return true;
+        return false;
+    }
+
+    async chechIsOwner(boardId: number, userId: number){
+        const boardUsers = await this.boardRepository.findById(boardId);
+        
+        if (boardUsers?.users.find(bu => {bu.userId === userId && bu.permission === 'owner'}))
+            return true;
+        return false;
     }
 }
