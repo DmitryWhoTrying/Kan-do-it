@@ -35,12 +35,12 @@ export interface ServerToClientEvets{
     'board:deleted': (boardId: number) => void;
 
     //изменения колонки
-    'column:created': (boardId: number) => void;
+    'column:created': (data:{boardId: number, column: Column}) => void;
     'column:updated': (data: {columnId: number, data: Partial<Column>}) => void;
     'column:deleted': (columnId: number) => void;
 
     //изменения задачи
-    'task:created': (columnId: number) => void;
+    'task:created': (data:{columnId: number, task: Task}) => void;
     'task:updated': (data: {taskId: number, columnId: number, task: Partial<Task>}) => void;
     'task:deleted': (taskId: number, columnId: number) => void;
 
