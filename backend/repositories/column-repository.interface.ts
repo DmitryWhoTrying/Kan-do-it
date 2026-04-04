@@ -6,4 +6,5 @@ export interface IColumnRepository{
     delete(columnID: number): Promise<boolean>;
     findAll(): Promise<Column[]>;
     find(columnID: number): Promise<Column | null>;
+    findByBoard(boardID: number): Promise<Column[]>;
 }

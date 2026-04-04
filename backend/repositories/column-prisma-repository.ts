@@ -5,7 +5,27 @@ import { IColumnRepository } from "./column-repository.interface";
 
 
 export class ColumnPrismaRepository implements IColumnRepository{
-    constructor(private prisma: PrismaClient){};
+    constructor(private prisma: PrismaClient){}
+    
+    async findByBoard(boardID: number): Promise<Column[]> {
+        const prismaColumns = await this.prisma.column.findMany({
+        where: {
+            boardId: boardID,
+        },
+        include: {
+            tasks: true,
+        },
+        orderBy: {
+            order: 'asc',
+        }
+    });
+
+        if (!prismaColumns)
+            return [];
+
+        return new ColumnMapper().toDomainMany(prismaColumns);
+    }
+;
 
     async create(columns: Omit<Column, "id" | "createdAt">, boardId: number): Promise<Column> {
         const prismaColumn = await this.prisma.column.create({

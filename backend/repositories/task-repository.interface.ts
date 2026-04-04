@@ -6,4 +6,5 @@ export interface ITaskRepository{
     delete(taskID: number): Promise<boolean>;
     findAll(): Promise<Task[]>;
     find(taskID: number): Promise<Task | null>;
+    findByColumn(columnId: number): Promise<Task[]>;
 }

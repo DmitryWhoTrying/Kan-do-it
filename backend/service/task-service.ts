@@ -46,4 +46,14 @@ export class TaskService{
 
         return task;
     }
+
+    async findByColumn(columnId: number){
+        const tasks = await this.TaskRepository.findByColumn(columnId);
+        if (tasks)
+            this.io.emit('task: findByColumn', tasks);
+        else
+            this.io.emit('task: findByColumn error or empty', columnId);
+
+        return tasks;
+    }
 }

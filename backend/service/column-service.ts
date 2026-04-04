@@ -36,11 +36,21 @@ export class ColumnService{
 
     async find(columnId: number){
         const col = await this.columnRepository.find(columnId);
-        if (col)
+        if (!col)
             this.io.emit('column:find error', columnId);
         else
             this.io.emit('column:find', columnId);
         
         return col;
+    }
+
+    async findByBoard(boardId: number){
+        const cols = await this.columnRepository.findByBoard(boardId);
+        if (cols)
+            this.io.emit('column:find by board', boardId);
+        else
+            this.io.emit('column:find by board error', boardId);
+
+        return cols;
     }
 }

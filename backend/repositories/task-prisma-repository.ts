@@ -7,6 +7,17 @@ import { ITaskRepository } from "./task-repository.interface";
 export class TaskPrismaRepository implements ITaskRepository{
     constructor(private prisma: PrismaClient){}
 
+    async findByColumn(columnId: number): Promise<Task[]> {
+        const prismaTasks = await this.prisma.task.findMany({
+            where: {columnId: columnId}
+        })
+
+        if (!prismaTasks)
+            return [];
+        else
+            return new TaskMapper().toDomainMany(prismaTasks);
+    }
+
     async create(task: Omit<Task, "id" | "createdAt">, columnId: number): Promise<Task> {
         const prismaTask = await this.prisma.task.create({
             data:{
