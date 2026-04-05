@@ -8,4 +8,15 @@ To run front-end react server:
 
 
 To run back-end prisma-db:
-...work in progress...
+
+<..\Kan-do-it\backend> npm install
+<..\Kan-do-it\backend> npx prisma generate
+#pg server must be on port 5432 (or change port in .env)
+<..\Kan-do-it\backend> npx prisma migrate dev
+<..\Kan-do-it\backend> npm run dev
+
+# also you can go to
+# http://localhost:3000/health
+# to check launch
+
+
