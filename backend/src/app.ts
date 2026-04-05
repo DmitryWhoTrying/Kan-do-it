@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 import helmet from 'helmet';
-import { prisma } from './Lib/prisma';
+import { prisma } from './lib/prisma';
 import { registerSocketHandlers } from './socket/socket-gateway';
 import { createBoardRoutes } from './routes/board.routes';
 import { createUserRoutes } from './routes/user.routes';
@@ -34,10 +34,19 @@ app.use((req, res, next) => {
   next();
 });
 
+
+console.log('Registering routes...');
+
+//app.use('/api/tasks', createTaskRoutes());
 // Регистрация HTTP-роутов
 app.use('/api/boards', createBoardRoutes());
+console.log('✓ Boards routes registered');
+
 app.use('/api/users', createUserRoutes());
+console.log('✓ User routes registered');
+
 app.use('/api/boardUsers', createBoardUserRoutes());
+console.log('✓ Board users routes registered');
 //app.use('/api/columns', createColumnRoutes());
 //app.use('/api/tasks', createTaskRoutes());
 
@@ -45,10 +54,11 @@ app.use('/api/boardUsers', createBoardUserRoutes());
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
+console.log('✓ Health routes registered');
 
 // Глобальный обработчик ошибок Express
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-  console.error('Express error:', err);
+  console.error('Express error ', err);
   
   // Prisma errors
   if (err.name === 'PrismaClientKnownRequestError') {
@@ -69,9 +79,10 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 });
 
 // 404 handler (должен быть последним)
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route not found' });
 });
+
 
 // 🔌 Инициализация Socket.IO
 const io = new Server(httpServer, {
@@ -97,7 +108,7 @@ httpServer.listen(PORT, () => {
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-  console.log('🛑 SIGTERM received, shutting down gracefully');
+  console.log('SIGTERM received, shutting down gracefully');
   await prisma.$disconnect();
   httpServer.close(() => {
     console.log('Server closed');

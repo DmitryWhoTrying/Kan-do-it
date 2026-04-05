@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "dev": "ts-node -r tsconfig-paths/register src/app.ts",
+    "dev": "tsx src/app.ts",
     "build": "tsc && cp -r ../shared dist/shared",
     "start": "node -r tsconfig-paths/register dist/app.js",
     "prisma:generate": "prisma generate",
@@ -12,6 +12,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
+    "cors": "^2.8.6",
     "express": "^5.2.1",
     "helmet": "^8.1.0",
     "pg": "^8.20.0",
@@ -25,6 +26,7 @@
     "@types/pg": "^8.18.0",
     "dotenv": "^17.3.1",
     "prisma": "^7.4.2",
+    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }

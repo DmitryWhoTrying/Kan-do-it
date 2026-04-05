@@ -14,7 +14,7 @@ import { PrismaTaskRepository } from "../repositories/task-prisma-repository";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../generated/prisma/client";
 
-import {prisma} from '../Lib/prisma';
+import {prisma} from '../lib/prisma';
 
 import { TaskService } from "../service/task-service";
 

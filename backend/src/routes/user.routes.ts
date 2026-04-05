@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { UserController } from '../controller/user-controller';
 import { UserService } from './../service/user-service';
 import { UserPrismaRepository } from './../repositories/user-prisma-repository';
-import { prisma } from '../Lib/prisma';
+import { prisma } from '../lib/prisma';
 
 export function createUserRoutes(): Router{
     const router = Router();
