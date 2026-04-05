@@ -1,5 +1,6 @@
 import { IColumnRepository } from "../repositories/column-repository.interface";
 import { Column } from "../../shared/types";
+import { BoardService } from "./board-service";
 
 
 export class ColumnService{
@@ -35,4 +36,5 @@ export class ColumnService{
         const cols = await this.columnRepository.findByBoard(boardId);
         return cols;
     }
+
 }

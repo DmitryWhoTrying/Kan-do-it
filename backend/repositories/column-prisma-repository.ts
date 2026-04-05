@@ -4,7 +4,7 @@ import { ColumnMapper } from "../mappers/ColumnMapper";
 import { IColumnRepository } from "./column-repository.interface";
 
 
-export class ColumnPrismaRepository implements IColumnRepository{
+export class PrismaColumnRepository implements IColumnRepository{
     constructor(private prisma: PrismaClient){}
     
     async findByBoard(boardID: number): Promise<Column[]> {

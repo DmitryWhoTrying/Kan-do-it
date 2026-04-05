@@ -4,7 +4,7 @@ import { TaskMapper } from "../mappers/taskMapper";
 import { ITaskRepository } from "./task-repository.interface";
 
 
-export class TaskPrismaRepository implements ITaskRepository{
+export class PrismaTaskRepository implements ITaskRepository{
     constructor(private prisma: PrismaClient){}
 
     async findByColumn(columnId: number): Promise<Task[]> {

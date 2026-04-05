@@ -52,7 +52,7 @@ class SocketService {
     }
 
     updateBoard(boardId: number, board: Partial<Board>){
-        this.socket?.emit('board:update', boardId, board);
+        this.socket?.emit('board:update', {boardId, board});
     }
 
     deleteBoard(boardId: number){
@@ -60,7 +60,7 @@ class SocketService {
     }
 
     createColumn(boardId: number){
-        this.socket?.emit('column:create', boardId);
+        this.socket?.emit('column:create',{boardId, });
     }
 
     updateColumn(columnId: number, data: Partial<Column>){

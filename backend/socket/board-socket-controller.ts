@@ -39,7 +39,7 @@ export class BoardSocketController{
         }
     }
 
-    hadleLeave = async (socket: TypedSocket, boardId: number) => {
+    handleLeave = async (socket: TypedSocket, boardId: number) => {
         try {
             const userId = socket.handshake.auth.userId;
 
@@ -50,14 +50,14 @@ export class BoardSocketController{
         }
     }
 
-    handleUpdate = async (socket: TypedSocket, boardId : number, data : Partial<Board>) => {
+    handleUpdate = async (socket: TypedSocket,data:{boardId: number, board: Partial<Board>}) => {
         try {
-            const updatedBoard = await this.BoardService.updateBoard(data, boardId);
+            const updatedBoard = await this.BoardService.updateBoard(data.board, data.boardId);
             
             if (!updatedBoard)
                 return socket.emit('error', 'Cannot find board to update');
 
-            socket.to(`board:${boardId}`).emit('board:updated', {boardId : boardId, board: updatedBoard});
+            socket.to(`board:${data.boardId}`).emit('board:updated', {boardId : data.boardId, board: updatedBoard});
         }
         catch(err){
             socket.emit('error', 'cannot update with such data');
