@@ -1,4 +1,4 @@
-import { disconnect } from "node:cluster";
+//import { disconnect } from "node:cluster"; пока не очень надо
 import { ClientToServerEvents, ServerToClientEvets } from "../../shared/socket-events.types";
 import { io, Socket } from "socket.io-client";
 import { Board, Column, Task } from "../../shared/types";
@@ -59,32 +59,31 @@ class SocketService {
         this.socket?.emit('board:delete', boardId)
     }
 
-    createColumn(boardId: number){
-        this.socket?.emit('column:create',{boardId, });
+    createColumn(boardId: number, column: Column){
+        this.socket?.emit('column:create',{boardId, column});
     }
 
-    updateColumn(columnId: number, data: Partial<Column>){
-        this.socket?.emit('column:update', {columnId: columnId, data: data})
+    updateColumn(columnId: number, data: Partial<Column>, boardId: number){
+        this.socket?.emit('column:update', {columnId: columnId, data: data, boardId})
     }
 
-    deleteColumn(columnId: number){
-        this.socket?.emit('column:delete', columnId);
+    deleteColumn(columnId: number, boardId: number){
+        this.socket?.emit('column:delete', {columnId, boardId});
     }
 
-    createTask(columnId: number) {
-        this.socket?.emit('task:create', columnId);
+    createTask(columnId: number, task: Task, boardId: number) {
+        this.socket?.emit('task:create', {task, columnId, boardId});
     }
 
-    updateTask(taskId: number, columnId: number, task: Partial<Task>){
-        this.socket?.emit('task:update', {taskId: taskId, columnId: columnId, task: task})
+    updateTask(taskId: number, columnId: number, boardId:number, task: Partial<Task>){
+        this.socket?.emit('task:update', {taskId, columnId, boardId, task})
     }
 
-    deleteTask(taskId: number, columnId: number){
-        this.socket?.emit('task:delete', taskId, columnId)
-    }
-
-
+    deleteTask(taskId: number, columnId: number, boardId: number){
+        this.socket?.emit('task:delete', {taskId, columnId, boardId});
+        }
     //Helper методы для подписки
     //Всё в чатике висит, вспомнить, доделать
+
 
 }
