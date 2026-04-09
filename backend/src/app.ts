@@ -84,7 +84,7 @@ app.use((req, res) => {
 });
 
 
-// 🔌 Инициализация Socket.IO
+// Инициализация Socket.IO
 const io = new Server(httpServer, {
   cors: {
     origin: process.env.CLIENT_URL || 'http://localhost:3000',
@@ -97,7 +97,7 @@ const io = new Server(httpServer, {
 // Регистрация обработчиков сокетов
 registerSocketHandlers(io);
 
-// 🚀 Запуск сервера
+// Запуск сервера
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 httpServer.listen(PORT, () => {

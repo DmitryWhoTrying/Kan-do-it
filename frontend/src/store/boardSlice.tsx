@@ -1,130 +1,243 @@
-import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import { Board, Column, Task } from '../../../shared/types';
+// frontend/src/store/slices/boardSlice.ts
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Board, BoardUser, Column, Task } from '../../../shared/types';
 
-interface boardsState{
-    boards: Board[];
+interface BoardState {
+  currentBoard: Board | null;      
+  currentUser: BoardUser | null;   
+  isLoading: boolean;              
+  error: string | null;            
 }
 
-const initialState:  boardsState= {
-    boards: []
-}
+const initialState: BoardState = {
+  currentBoard: null,
+  currentUser: null,
+  isLoading: false,
+  error: null,
+};
 
-const boardsSlice = createSlice({
-    name: 'boards',
-    initialState,
-    reducers:{
-        //Экшен новой доски
-        addBoard: (state, action : PayloadAction<Board>) =>
-        {
-            state.boards.push(action.payload);
-        },
+const boardSlice = createSlice({
+  name: 'board',
+  initialState,
+  reducers: {
+    // === Загрузка/сброс доски ===
+    
+    setBoard: (state, action: PayloadAction<Board>) => {
+      state.currentBoard = action.payload;
+      state.error = null;
+    },
 
-        setBoard:(state, action : PayloadAction<{board : Board}>) =>{
-            const curBoard = state.boards.find(brd => brd.id === action.payload.board.id);
+    clearBoard: (state) => {
+      state.currentBoard = null;
+      state.error = null;
+    },
 
-            if (curBoard)
-            {
-                curBoard.name = action.payload.board.name;
-                curBoard.owner= action.payload.board.owner;
-                curBoard.users = action.payload.board.users;
-            }
-        },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
 
-        setBoardName: (state, action : PayloadAction<{boardId : string, boardName : string}>) => {
-            const board = state.boards.find(brd => brd.id === action.payload.boardId);
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+    },
 
-            if (board)
-                board.name = action.payload.boardName;
-        },
-        
-        removeBoard:(state, action : PayloadAction<{boardId : string}>) =>{
-            state.boards = state.boards.filter(brd => brd.id !== action.payload.boardId);
-        },
+    // === Пользователь и права ===
+    
+    setCurrentUser: (state, action: PayloadAction<BoardUser>) => {
+      state.currentUser = action.payload;
+    },
 
-        //Экшен новой колонки
-        addColumn: (state, action: PayloadAction<{boardId : string; column : Column}>) =>
-        {
-            state.boards.find( 
-                board => board.id === action.payload.boardId)?.
-                columns.push(action.payload.column);     
-        },
+    clearCurrentUser: (state) => {
+      state.currentUser = null;
+    },
 
-        setColumn: (state, action: PayloadAction<{boardId : string; column : Column}>) =>
-        {
-            const editColumn = state.boards.find( 
-                board => board.id === action.payload.boardId)?.
-                columns.find((col: { id: any; }) => col.id === action.payload.column.id);   
+    // === Обновление доски ===
+    
+    updateBoardName: (state, action: PayloadAction<string>) => {
+      if (state.currentBoard) {
+        state.currentBoard.name = action.payload;
+      }
+    },
 
-            if (editColumn)
-            {
-                editColumn.order = action.payload.column.order;
-                editColumn.tasks = action.payload.column.tasks;
-                editColumn.title = action.payload.column.title;          
-            }
-        },
+    // === Колонки ===
+    
+    addColumn: (state, action: PayloadAction<Column>) => {
+      if (state.currentBoard) {
+        state.currentBoard.columns.push(action.payload);
+        // Сортируем по order после добавления
+        state.currentBoard.columns.sort((a, b) => (a.order ?? a.id) - 
+        (b.order ?? b.id));
+      }
+    },
 
-        setColumnOrder:(state, action: PayloadAction<{boardId: string; columnsToSet : Column[]}>)=>
-        {
-            const board = state.boards.find(brd => brd.id === action.payload.boardId);
+    updateColumn: (state, action: PayloadAction<Column>) => {
+      if (!state.currentBoard) return;
+      
+      const index = state.currentBoard.columns.findIndex(
+        col => col.id === action.payload.id
+      );
+      
+      if (index !== -1) {
+        state.currentBoard.columns[index] = action.payload;
+      }
+    },
 
-            if (board)
-            {
-                board.columns = action.payload.columnsToSet;                
-            }
-        },
+    updateColumnsOrder: (state, action: PayloadAction<Column[]>) => {
+      if (state.currentBoard) {
+        state.currentBoard.columns = action.payload;
+      }
+    },
 
-        removeColumn: (state, action: PayloadAction<{boardId : string; columnId : string}>) =>
-        {
-            const boardToFilter = state.boards.find(brd=> brd.id === action.payload.boardId);
+    removeColumn: (state, action: PayloadAction<number>) => {
+      if (!state.currentBoard) return;
+      
+      state.currentBoard.columns = state.currentBoard.columns.filter(
+        col => col.id !== action.payload
+      );
+    },
 
-            if (boardToFilter)
-                boardToFilter.columns = boardToFilter?.columns.filter(col => col.id !== action.payload.columnId); 
-        }, 
+    // === Задачи ===
+    
+    addTask: (state, action: PayloadAction<{ columnId: number; task: Task }>) => {
+      if (!state.currentBoard) return;
+      
+      const column = state.currentBoard.columns.find(
+        col => col.id === action.payload.columnId
+      );
+      
+      if (column) {
+        column.tasks.push(action.payload.task);
+        column.tasks.sort((a, b) => (a.order ?? a.id) - (b.order ?? b.id));
+      }
+    },
 
-        //Экшен новой задачи
-        addTask: (state, action: PayloadAction<{boardId : string; columnId : string, task : Task}>) =>
-        {
-            state.boards.find( 
-                board => board.id === action.payload.boardId)?.
-                columns.find((col: { id: string; }) => col.id === action.payload.columnId)?.
-                tasks.push(action.payload.task);  
-        },
-
-        setTask: (state, action: PayloadAction<{boardId : string; columnId : string, task : Task}>) =>
-        {
-            const editTask = state.boards.find( 
-                board => board.id === action.payload.boardId)?.
-                columns.find(col => col.id === action.payload.columnId)?.
-                tasks.find(tsk => tsk.id === action.payload.task.id);
-                
-            if (editTask)
-            {
-                editTask.description = action.payload.task.description;
-                editTask.endDate = action.payload.task.endDate;
-                editTask.priority = action.payload.task.priority;
-                editTask.startDate = action.payload.task.startDate;
-                editTask.tag = action.payload.task.tag;
-                editTask.title = action.payload.task.title;
-            }
-        },
-
-        removeTask: (state, action: PayloadAction<{boardId : string; columnId : string, taskId : string}>) =>
-        {
-            const columnToFilter = state.boards.find(
-                brd => brd.id === action.payload.boardId
-            )?.columns.find((col: { id: string; }) => col.id === action.payload.columnId);
-            
-            if (columnToFilter)
-                columnToFilter.tasks = columnToFilter.tasks.filter((tsk: { id: string; }) => tsk.id !== action.payload.taskId)
+    updateTask: (state, action: PayloadAction<{ taskId: number; updates: Partial<Task> }>) => {
+      if (!state.currentBoard) return;
+      
+      // Ищем задачу во всех колонках
+      for (const column of state.currentBoard.columns) {
+        const task = column.tasks.find(t => t.id === action.payload.taskId);
+        if (task) {
+          Object.assign(task, action.payload.updates);
+          return;
         }
-    }
+      }
+    },
+
+    moveTask: (state, action: PayloadAction<{ 
+      taskId: number; 
+      fromColumnId: number; 
+      toColumnId: number; 
+      newOrder: number;
+    }>) => {
+      if (!state.currentBoard) return;
+      
+      const { taskId, fromColumnId, toColumnId, newOrder } = action.payload;
+      
+      // Находим задачу в исходной колонке
+      const fromColumn = state.currentBoard.columns.find(c => c.id === fromColumnId);
+      const taskIndex = fromColumn?.tasks.findIndex(t => t.id === taskId);
+      
+      if (taskIndex === undefined || taskIndex === -1 || !fromColumn) return;
+      
+      // Извлекаем задачу
+      const [task] = fromColumn.tasks.splice(taskIndex, 1);
+      
+      // Если колонка изменилась — добавляем в новую
+      if (fromColumnId !== toColumnId) {
+        const toColumn = state.currentBoard.columns.find(c => c.id === toColumnId);
+        if (toColumn) {
+          // Вставляем на нужную позицию
+          const insertIndex = toColumn.tasks.findIndex(t => (t.order ?? 0) >= newOrder);
+          if (insertIndex === -1) {
+            toColumn.tasks.push(task);
+          } else {
+            toColumn.tasks.splice(insertIndex, 0, task);
+          }
+          //task.columnId = toColumnId;
+        }
+      } else {
+        // Та же колонка — просто меняем порядок
+        const insertIndex = fromColumn.tasks.findIndex(t => (t.order ?? 0) >= newOrder);
+        if (insertIndex === -1) {
+          fromColumn.tasks.push(task);
+        } else {
+          fromColumn.tasks.splice(insertIndex, 0, task);
+        }
+      }
+      
+      // Пересчитываем order для всех задач в целевой колонке
+      const targetColumn = state.currentBoard.columns.find(c => c.id === toColumnId);
+      if (targetColumn) {
+        targetColumn.tasks.forEach((t, idx) => {
+          t.order = idx;
+        });
+      }
+    },
+
+    removeTask: (state, action: PayloadAction<{ columnId: number; taskId: number }>) => {
+      if (!state.currentBoard) return;
+      
+      const column = state.currentBoard.columns.find(
+        col => col.id === action.payload.columnId
+      );
+      
+      if (column) {
+        column.tasks = column.tasks.filter(
+          task => task.id !== action.payload.taskId
+        );
+      }
+    },
+
+    // === Оптимистичное обновление при Socket-событиях ===
+    
+    syncBoard: (state, action: PayloadAction<Board>) => {
+      // Полная синхронизация (если пришли расхождения)
+      state.currentBoard = action.payload;
+    },
+
+    syncTask: (state, action: PayloadAction<Task>) => {
+      // Обновление задачи от другого пользователя
+      if (!state.currentBoard) return;
+      
+      for (const column of state.currentBoard.columns) {
+        const idx = column.tasks.findIndex(t => t.id === action.payload.id);
+        if (idx !== -1) {
+          column.tasks[idx] = action.payload;
+          return;
+        }
+      }
+    },
+  },
 });
 
-
+// Экспорт экшенов
 export const {
-    addTask, setTask, removeTask, 
-    addColumn, setColumn, removeColumn, setColumnOrder,
-    addBoard, setBoard, removeBoard, setBoardName
-} = boardsSlice.actions;
+  // Доска
+  setBoard,
+  clearBoard,
+  setLoading,
+  setError,
+  updateBoardName,
+  
+  // Пользователь
+  setCurrentUser,
+  clearCurrentUser,
+  
+  // Колонки
+  addColumn,
+  updateColumn,
+  updateColumnsOrder,
+  removeColumn,
+  
+  // Задачи
+  addTask,
+  updateTask,
+  moveTask,
+  removeTask,
+  
+  // Синхронизация
+  syncBoard,
+  syncTask,
+} = boardSlice.actions;
 
-export default boardsSlice.reducer;
+export default boardSlice.reducer;

@@ -17,7 +17,7 @@ export function createBoardUserRoutes(): Router{
 
     router.post('/', boardUserController.create.bind(boardUserController));
     router.put('/boards/:boardId/users/:userId', boardUserController.update.bind(boardUserController));
-    router.delete('/boards/:boardId/users/:userId', boardUserController.update.bind(boardUserController));
+    router.delete('/boards/:boardId/users/:userId', boardUserController.delete.bind(boardUserController));
 
     return router;
 }

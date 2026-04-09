@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import './App.css';
+import '../src/App.css';
 import Sidebar from './components/Sidebar';
 import DraggableColumn from './components/DraggableColumn';
 import { Task as TaskType, Column as ColumnType, Board, Task } from '../../shared/types';
