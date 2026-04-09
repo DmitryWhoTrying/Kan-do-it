@@ -1,4 +1,4 @@
-import { Board } from "../backend/generated/prisma/client";
+import { Board } from "../shared/types";
 import { Task, Column, Permission } from "./types";
 
 export interface ClientToServerEvents{
@@ -29,7 +29,7 @@ export interface ClientToServerEvents{
     'task:delete': (data:{taskId: number, columnId: number, boardId: number}) => void;
 }
 
-export interface ServerToClientEvets{
+export interface ServerToClientEvents{
     //изменения доски
     'board:state': (board: Board) => void;
     'board:updated': (data:{boardId: Number, board: Partial<Board>}) => void;

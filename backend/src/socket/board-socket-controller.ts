@@ -1,14 +1,14 @@
 import {Socket, Server} from 'socket.io';
 import { BoardService} from '../service/board-service';
-import { ClientToServerEvents, ServerToClientEvets } from '../../../shared/socket-events.types';
+import { ClientToServerEvents, ServerToClientEvents } from '../../../shared/socket-events.types';
 import { Board } from '../../../shared/types';
 
-type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvets>;
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 export class BoardSocketController{
     constructor(
         private BoardService: BoardService,
-        private io: Server<ClientToServerEvents, ServerToClientEvets>
+        private io: Server<ClientToServerEvents, ServerToClientEvents>
     ){};
 
     handleJoin = async (socket: TypedSocket, boardId: number) =>{

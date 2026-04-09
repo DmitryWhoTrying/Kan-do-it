@@ -1,5 +1,5 @@
 import { Socket, Server } from "socket.io";
-import { ClientToServerEvents, ServerToClientEvets } from "../../../shared/socket-events.types";
+import { ClientToServerEvents, ServerToClientEvents } from "../../../shared/socket-events.types";
 import { BoardSocketController} from "./board-socket-controller";
 import { ColumnSocketController } from "./column-socket-controller";
 import { TaskSocketController } from "./task-socket-controller";
@@ -18,8 +18,8 @@ import {prisma} from '../lib/prisma';
 
 import { TaskService } from "../service/task-service";
 
-type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvets>;
-type TypedIO = Server<ClientToServerEvents, ServerToClientEvets>;
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+type TypedIO = Server<ClientToServerEvents, ServerToClientEvents>;
 
 export function registerSocketHandlers(io: TypedIO){
 

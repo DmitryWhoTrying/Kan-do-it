@@ -1,14 +1,14 @@
 import { Socket, Server } from "socket.io";
 import {ColumnService} from '../service/column-service';
-import { ClientToServerEvents, ServerToClientEvets } from "../../../shared/socket-events.types";
+import { ClientToServerEvents, ServerToClientEvents } from "../../../shared/socket-events.types";
 import { Column } from "../../../shared/types";
 
-type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvets>;
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 export class ColumnSocketController {
     constructor(
         private columnService: ColumnService,
-        private io: Server<ClientToServerEvents, ServerToClientEvets>
+        private io: Server<ClientToServerEvents, ServerToClientEvents>
     ) {}
 
     handleCreate = async (socket: TypedSocket, data:{boardId: number, column: Column}) => {

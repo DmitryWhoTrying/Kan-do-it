@@ -1,14 +1,14 @@
 import { Socket, Server } from "socket.io";
 import {TaskService} from '../service/task-service';
-import { ClientToServerEvents, ServerToClientEvets } from "../../../shared/socket-events.types";
+import { ClientToServerEvents, ServerToClientEvents } from "../../../shared/socket-events.types";
 import { Task } from "../../../shared/types";
 
-type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvets>;
+type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
 export class TaskSocketController {
     constructor(
         private taskService: TaskService,
-        private io: Server<ClientToServerEvents, ServerToClientEvets>
+        private io: Server<ClientToServerEvents, ServerToClientEvents>
     ) {}
 
     handleCreate = async (socket: TypedSocket, data: {task:Task, columnId: number, boardId: number}) => {
