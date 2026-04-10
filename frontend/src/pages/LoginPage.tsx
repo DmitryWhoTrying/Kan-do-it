@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { setCurrentUser, setAuthToken, clearBoard } from '../store/boardSlice';
 import { authService } from '../services/auth-service';
-import { socketService } from '../../socket/socket-service';
+import { socketService } from '../socket/socket-service';
 
 const LoginPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);

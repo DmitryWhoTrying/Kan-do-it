@@ -1,7 +1,7 @@
 //import { disconnect } from "node:cluster"; пока не очень надо
-import { ClientToServerEvents, ServerToClientEvents as ServerToClientEvents } from "../../shared/socket-events.types";
+import { ClientToServerEvents, ServerToClientEvents as ServerToClientEvents } from "../../../shared/socket-events.types";
 import { io, Socket } from "socket.io-client";
-import { Board, Column, Task, User } from "../../shared/types";
+import { Board, Column, Task, User } from "../../../shared/types";
 import { useCallback } from "react";
 
 class SocketService {

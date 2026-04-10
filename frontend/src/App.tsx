@@ -7,7 +7,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { store, AppDispatch, RootState } from './store';
 import { setCurrentUser, setAuthToken, logout, clearBoard } from './store/boardSlice';
 import { authService } from './services/auth-service';
-import { socketService } from '../socket/socket-service';
+import { socketService } from '../src/socket/socket-service';
 import apiClient from './services/api';
 
 // Страницы
