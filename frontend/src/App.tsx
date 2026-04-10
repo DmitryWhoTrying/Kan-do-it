@@ -1,7 +1,6 @@
-// frontend/src/App.tsx
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import { Provider, useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { store, AppDispatch, RootState } from './store';
@@ -92,9 +91,8 @@ const AppInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) =
 // Основной компонент приложения с роутингом
 const AppContent: React.FC = () => {
   return (
-    <DndProvider backend={HTML5Backend}>
-      <AppInitializer>
-        <BrowserRouter>
+      <DndProvider backend={HTML5Backend}>
+        <AppInitializer>
           <Routes>
             {/* === Публичные маршруты === */}
             <Route 
@@ -126,10 +124,9 @@ const AppContent: React.FC = () => {
               path="*" 
               element={<Navigate to="/" replace />} 
             />
-          </Routes>
-        </BrowserRouter>
-      </AppInitializer>
-    </DndProvider>
+          </Routes> 
+        </AppInitializer>
+      </DndProvider>
   );
 };
 
