@@ -4,7 +4,8 @@ import { Board, BoardUser, Column, Task } from '../../../shared/types';
 
 interface BoardState {
   currentBoard: Board | null;      
-  currentUser: BoardUser | null;   
+  currentUser: BoardUser | null; 
+  authToken: string | null;   
   isLoading: boolean;              
   error: string | null;            
 }
@@ -12,6 +13,7 @@ interface BoardState {
 const initialState: BoardState = {
   currentBoard: null,
   currentUser: null,
+  authToken: null,
   isLoading: false,
   error: null,
 };
@@ -29,6 +31,8 @@ const boardSlice = createSlice({
 
     clearBoard: (state) => {
       state.currentBoard = null;
+      state.currentUser = null;
+      state.authToken = null;
       state.error = null;
     },
 
@@ -38,6 +42,19 @@ const boardSlice = createSlice({
 
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
+    },
+
+
+    //token
+    setAuthToken: (state, action: PayloadAction<string | null>) => {
+      state.authToken = action.payload;
+    },
+
+    logout: (state) => {
+      state.currentBoard = null;
+      state.currentUser = null;
+      state.authToken = null;
+      state.error = null;
     },
 
     // === Пользователь и права ===
@@ -224,6 +241,10 @@ export const {
   setError,
   updateBoardName,
   updateBoardFields,
+
+  //token
+  setAuthToken,
+  logout,
   
   // Пользователь
   setCurrentUser,

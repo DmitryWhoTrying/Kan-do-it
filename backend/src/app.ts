@@ -8,6 +8,7 @@ import { registerSocketHandlers } from './socket/socket-gateway';
 import { createBoardRoutes } from './routes/board.routes';
 import { createUserRoutes } from './routes/user.routes';
 import { createBoardUserRoutes } from './routes/boarduser.routes';
+import { createAuthRoutes } from './routes/auth.routes';
 //import { createTaskRoutes } from './routes/task.routes';
 //import { createColumnRoutes } from './routes/column.routes';
 
@@ -49,6 +50,9 @@ app.use('/api/boardUsers', createBoardUserRoutes());
 console.log('✓ Board users routes registered');
 //app.use('/api/columns', createColumnRoutes());
 //app.use('/api/tasks', createTaskRoutes());
+
+app.use('/api/auth', createAuthRoutes());
+console.log('✓ Authentification routes registered')
 
 // Health check endpoint
 app.get('/health', (req, res) => {

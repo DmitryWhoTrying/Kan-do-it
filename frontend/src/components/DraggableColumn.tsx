@@ -3,7 +3,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Column as ColumnType, Task as TaskType } from '../../../shared/types';
 import Task from './Task';
-import { ItemTypes } from '../App';
+import { ItemTypes } from '../types/dnd-types';
 import {  updateColumn  } from '../store/boardSlice';
 import { useAppDispatch } from '../store/hooks';
 

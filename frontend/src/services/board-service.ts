@@ -49,11 +49,11 @@ export class BoardService {
   /** Создать новую доску */
   async create(dto: Board): Promise<Board> {
     const response = await apiClient.post<ApiResponse<Board>>(this.boardEndpoint, dto);
-    
+
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.error || 'Failed to create board');
     }
-    
+
     return response.data.data;
   }
 

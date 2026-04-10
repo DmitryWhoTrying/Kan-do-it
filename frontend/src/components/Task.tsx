@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Task as TaskType } from '../../../shared/types';
-import { ItemTypes } from '../App';
+import { ItemTypes } from '../types/dnd-types';
 import { useAppDispatch } from '../store/hooks';
 //import { setTask } from '../store/boardSlice';
 

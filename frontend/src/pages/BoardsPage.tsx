@@ -46,7 +46,7 @@ const BoardsPage: React.FC = () => {
           userName: currentUser.userName,
           permission: 'owner'
         }],
-        columns: []
+        columns:[]
       });
       navigate(`/board/${newBoard.id}`);
     } catch (err) {

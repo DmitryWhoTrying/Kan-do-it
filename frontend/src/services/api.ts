@@ -13,7 +13,8 @@ const apiClient: AxiosInstance = axios.create({
 // Интерцептор для добавления токена
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('authToken'); // Или из стейта/куки
+    //  Автоматически добавляем токен из локалстора
+    const token = localStorage.getItem('authToken');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -26,7 +27,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // Можно добавить логирование, редирект на логин при 401 и т.д.
+    // Обработка 401 — автоматический выход
+    if (error.response?.status === 401) {
+      localStorage.removeItem('authToken');
+      // Можно добавить редирект на /login через события
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+    }
     console.error('API Error:', error.response?.data || error.message);
     return Promise.reject(error);
   }

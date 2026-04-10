@@ -1,227 +1,136 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import '../src/App.css';
-import Sidebar from './components/Sidebar';
-import DraggableColumn from './components/DraggableColumn';
-import { Task as TaskType, Column as ColumnType, Board, Task } from '../../shared/types';
+// frontend/src/App.tsx
+import React, { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Provider, useDispatch, useSelector } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useAppDispatch, useAppSelector } from './store/hooks';
-import { addTask, updateBoardName, updateBoardFields, removeColumn, removeTask, updateColumn, updateTask as updateTaskAction, setBoard, updateColumnsOrder } from './store/boardSlice';
+import { store, AppDispatch, RootState } from './store';
+import { setCurrentUser, setAuthToken, logout, clearBoard } from './store/boardSlice';
+import { authService } from './services/auth-service';
+import { socketService } from '../socket/socket-service';
+import apiClient from './services/api';
+
+// Страницы
+import LoginPage from './pages/LoginPage';
+import BoardsPage from './pages/BoardsPage';
+import BoardPage from './pages/BoardPage';
+
+// Глобальные стили
+import './App.css';
 
 
-export const ItemTypes = {
-  TASK: 'task',
-  COLUMN: 'column'
+// Компонент защиты маршрутов (редирект на логин, если нет пользователя)
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const currentUser = useSelector((state: RootState) => state.board.currentUser);
+  
+  if (!currentUser) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <>{children}</>;
 };
 
-function App() {
+// Компонент инициализации приложения (восстановление сессии)
+const AppInitializer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const currentUser = useSelector((state: RootState) => state.board.currentUser);
 
-  const dispatch = useAppDispatch();
+  // Слушаем событие разавторизации от api.ts (при 401 ошибке)
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      dispatch(logout());
+      authService.clearToken();
+      socketService.disconnect();
+      navigate('/login');
+    };
 
-  const currentBoard = useAppSelector(state => state.board.currentBoard);
-  const currentUser = useAppSelector(state => state.board.currentUser);
-  
-  // Инициализация демо-данных, если досок нет
-  // useEffect(() => {
-  //   if (boards.length === 0) {
-  //     const demoBoard: Board = {
-  //       id: '1',
-  //       name: 'Проект "Канбан"',
-  //       owner: 'username',
-  //       users: ['username'],
-  //       columns: [
-  //         {
-  //           id: '1',
-  //           title: 'В планах',
-  //           order: 0,
-  //           tasks: [
-  //             {
-  //               id: '1',
-  //               title: 'Задача 1',
-  //               description: 'Большой текст задачи 1...',
-  //               priority: 'high',
-  //               startDate: '2026-02-10',
-  //               endDate: '2026-02-20',
-  //               tag: 'Приоритетная задача',
-  //               order: 0
-  //             },
-  //             {
-  //               id: '2',
-  //               title: 'Задача 2',
-  //               description: 'Текст задачи 2',
-  //               startDate: '2026-02-10',
-  //               tag: 'Без срока',
-  //               order: 1
-  //             }
-  //           ]
-  //         },
-  //         {
-  //           id: '2',
-  //           title: 'В работе',
-  //           order: 1,
-  //           tasks: [
-  //             {
-  //               id: '5',
-  //               title: 'Задача 1',
-  //               description: 'Текст задачи...',
-  //               startDate: '2026-02-10',
-  //               order: 0
-  //             }
-  //           ]
-  //         },
-  //         {
-  //           id: '3',
-  //           title: 'Выполнено',
-  //           order: 2,
-  //           tasks: []
-  //         }
-  //       ]
-  //     };
-  //     dispatch(addBoard(demoBoard));
-  //   }
-  // }, [boards.length, dispatch]);
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [dispatch, navigate]);
 
-  const moveTask = useCallback((taskId: number, sourceColumnId: number, targetColumnId: number) =>
-    {
-      if (!currentBoard) 
-        return;
+  // Восстановление сессии при загрузке приложения
+  useEffect(() => {
+    const initializeApp = async () => {
+      const token = authService.getToken();
+      
+      if (token && !currentUser) {
+        // просто восстанавливаем пользователя из токена
+        // В реальном проекте здесь был бы запрос /api/auth/me
+        const tokenParts = token.split('_');
+        if (tokenParts.length >= 3) {
+          const userId = parseInt(tokenParts[2]);
+          const userName = localStorage.getItem('lastUsername') || 'User';
+          
+          dispatch(setCurrentUser({
+            boardId: -1,
+            userId,
+            userName,
+            permission: 'owner'
+          }));
+          dispatch(setAuthToken(token));
+          
+          // Инициализируем сокет
+          socketService.connect(userId);
+        }
+      }
+    };
 
-      //сообщение в лог для отладки
-      console.log("moving task:", {taskId, sourceColumnId, targetColumnId});
+    initializeApp();
+  }, [dispatch, currentUser]);
 
-      const sourceColumn = currentBoard.columns.find((col: { id: number; }) => col.id === sourceColumnId);
-      const task = sourceColumn?.tasks.find((tsk: { id: number; }) => tsk.id === taskId);
+  // Очистка при размонтировании
+  useEffect(() => {
+    return () => {
+      socketService.disconnect();
+    };
+  }, []);
 
-      if (!task)
-        return;
+  return <>{children}</>;
+};
 
-      // Сохраняем копию задачи для добавления
-      const taskToMove = { ...task };
-
-      // Обновляем порядок задачи для целевой колонки
-      const targetColumn = currentBoard.columns.find((col: { id: number; }) => col.id === targetColumnId);
-      taskToMove.order = targetColumn ? targetColumn.tasks.length : 0;
-
-      // Используем существующие редьюсеры
-
-      dispatch(removeTask({
-        columnId: sourceColumnId,
-        taskId: task.id
-      }))
-
-      dispatch(addTask({  
-        columnId: targetColumnId, 
-        task: taskToMove 
-      }));
-
-      console.log('борда текущая', currentBoard)
-      }, [currentBoard, dispatch])
-
-
-// Функция перемещения колонок
-const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
-  if (!currentBoard) return;
-
-  console.log('Moving column from', dragIndex, 'to', hoverIndex);
-
-    const sortedColumns = [...currentBoard.columns].sort((a, b) => 
-    (a.order || 0) - (b.order || 0)
-  );
-
-  //новый массив, старая в отдельный слот
-  const newColumns = [...currentBoard.columns];
-  const [removedColumn] = newColumns.splice(dragIndex, 1);
-  
-  // Вставляем на новое место
-  newColumns.splice(hoverIndex, 0, removedColumn);
-
-  // Обновляем order и диспатчим
-  const updatedColumns = newColumns.map((col, idx) => ({ ...col, order: idx }));
-  
-  dispatch(updateColumnsOrder({ 
-    ...updatedColumns 
-  }));  
-
-}, [currentBoard, dispatch]);
-
-
-  const updateTask = useCallback((columnId: number, updatedTask: Task) => {
-    if (!currentBoard) return;
-  
-
-    dispatch(updateTaskAction({ 
-    taskId: updatedTask.id, 
-    updates: updatedTask 
-   }));
-  }, [currentBoard, dispatch]);
-
-  const updateBoard = useCallback((updatedBoard: Board)=> {
-    if (!currentBoard)
-      return;
-
-    dispatch(setBoard({...updatedBoard}))
-  }, [currentBoard, dispatch])
-
-  const handleBoardTitleChange = (newBoardName: string) =>{
-      if (!currentBoard)
-        return;
-
-      dispatch(updateBoardName(newBoardName));
-    }
-
-  if (!currentBoard) {
-    return <div>Кажется, доска до сих пор не выбрана...</div>;
-  }
-
+// Основной компонент приложения с роутингом
+const AppContent: React.FC = () => {
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="App">
-        <header>
-          <h1 className="header-logo">Kan-do-it</h1>
-          <nav>
-            <a>{currentUser?.userName ?? "Кто ты, воин?"}</a>
-            <button name="log-out-btn">Выйти</button>
-          </nav>
-        </header>
-
-        <div className="main-div">
-          <Sidebar />
-          
-          <div className="work-space">
-            <h2 
-              className="table-title-h2"
-              contentEditable
-              suppressContentEditableWarning
-              onBlur={(e)=> handleBoardTitleChange(e.currentTarget.textContent || currentBoard.name)}
-            >{currentBoard.name}</h2>
-
-            <div className="columns">
-              {currentBoard.columns
-                  .slice()
-                  .sort((a: ColumnType, b: ColumnType) => (a.order || 0) - (b.order || 0))
-                  .map((column: ColumnType, index: number) => (
-                    <DraggableColumn
-                      key={column.id}
-                    column={column}
-                    index={index}
-                    boardId={currentBoard.id}
-                    onMoveTask={moveTask}
-                    onMoveColumn={moveColumn}
-                    onUpdateTask={updateTask}
-                    />
-                  ))}
-            </div>
-          </div>
-        </div>
-
-        <footer>
-          <div>
-            Design, develop, test by @DmitryFromFIb. 2026
-          </div>
-        </footer>
-      </div>
+      <AppInitializer>
+        <BrowserRouter>
+          <Routes>
+            {/* === Публичные маршруты === */}
+            <Route 
+              path="/login" 
+              element={<LoginPage />} 
+            />
+            
+            {/* === Защищённые маршруты === */}
+            <Route 
+              path="/" 
+              element={
+                <ProtectedRoute>
+                  <BoardsPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            <Route 
+              path="/board/:boardId" 
+              element={
+                <ProtectedRoute>
+                  <BoardPage />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* === Обработка несуществующих маршрутов === */}
+            <Route 
+              path="*" 
+              element={<Navigate to="/" replace />} 
+            />
+          </Routes>
+        </BrowserRouter>
+      </AppInitializer>
     </DndProvider>
   );
-}
+};
 
-export default App;
+export default AppContent;
