@@ -94,7 +94,7 @@ class SocketService {
         this.socket?.on('board:state', callback);
     }
 
-    onBoardUpdated(callback: (data:{boardId: Number, board: Partial<Board>}) => void) {
+    onBoardUpdated(callback: (data:{boardId: number, board: Partial<Board>}) => void) {
         this.socket?.on('board:updated', callback);
     }
 

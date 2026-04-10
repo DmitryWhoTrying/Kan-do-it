@@ -4,14 +4,14 @@ import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Task as TaskType } from '../../../shared/types';
 import { ItemTypes } from '../App';
 import { useAppDispatch } from '../store/hooks';
-import { setTask } from '../store/boardSlice';
+//import { setTask } from '../store/boardSlice';
 
 interface TaskProps {
   task: TaskType;
-  columnId: string;
-  boardId: string;
-  onUpdateTask: (columnId: string, updatedTask: TaskType) => void;
-  onDeleteTask?: (columnId: string, taskId: string) => void;
+  columnId: number;
+  boardId: number;
+  onUpdateTask: (columnId: number, updatedTask: TaskType) => void;
+  onDeleteTask?: (columnId: number, taskId: number) => void;
 }
 
 const Task: React.FC<TaskProps> = ({ 

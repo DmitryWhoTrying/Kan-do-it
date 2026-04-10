@@ -6,16 +6,20 @@ import {
   addColumn, 
   moveTask, 
   setCurrentUser,
-  syncTask, setLoading, setError
+  syncTask, setLoading, setError,
+  clearBoard,
+  updateBoardFields
 } from '../store/boardSlice';
 import { socketService } from '../../socket/socket-service';
 import { AppDispatch, RootState } from '../store';
+import { BoardService } from '../services/board-service';
 
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 export const BoardPage = ({ boardId, userId }: { boardId: number; userId: number }) => {
   const dispatch = useAppDispatch();
   const { currentBoard, currentUser, isLoading } = useSelector((state: RootState) => state.board);
+  const boardService = new BoardService();
 
   // Загрузка доски при монтировании
   useEffect(() => {
@@ -37,7 +41,7 @@ export const BoardPage = ({ boardId, userId }: { boardId: number; userId: number
     });
 
     socketService.onBoardUpdated((updatedBoard) => {
-      dispatch(setBoard(updatedBoard));
+      dispatch(updateBoardFields(updatedBoard.board));
     });
 
     return () => {
@@ -53,17 +57,17 @@ export const BoardPage = ({ boardId, userId }: { boardId: number; userId: number
     dispatch(moveTask({ taskId, fromColumnId, toColumnId, newOrder }));
     
     // 2. Отправка на сервер для синхронизации
-    socketService.updateTask({ taskId, columnId: toColumnId, boardId, order: newOrder });
+    socketService.updateTask(taskId, toColumnId, boardId, {order: newOrder});
   };
 
   if (isLoading) return <div>On loading...</div>;
   if (!currentBoard) return <div>Error 404, board not...</div>;
 
-  return (
-    <Board 
-      board={currentBoard} 
-      permission={currentUser?.permission}
-      onDragEnd={handleDragEnd}
-    />
-  );
+  // return (
+  //   <Board 
+  //     board={currentBoard} 
+  //     permission={currentUser?.permission}
+  //     onDragEnd={handleDragEnd}
+  //   />
+  // );
 };

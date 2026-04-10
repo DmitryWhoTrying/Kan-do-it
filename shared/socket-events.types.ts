@@ -32,7 +32,7 @@ export interface ClientToServerEvents{
 export interface ServerToClientEvents{
     //изменения доски
     'board:state': (board: Board) => void;
-    'board:updated': (data:{boardId: Number, board: Partial<Board>}) => void;
+    'board:updated': (data:{boardId: number, board: Partial<Board>}) => void;
     'board:deleted': (boardId: number) => void;
 
     //изменения колонки

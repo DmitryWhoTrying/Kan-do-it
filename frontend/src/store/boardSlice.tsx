@@ -58,8 +58,13 @@ const boardSlice = createSlice({
       }
     },
 
+    updateBoardFields:(state, action: PayloadAction<Partial<Board>>) => {
+      if (state.currentBoard) {
+         Object.assign(state.currentBoard, action.payload);
+      }
+    },
+
     // === Колонки ===
-    
     addColumn: (state, action: PayloadAction<Column>) => {
       if (state.currentBoard) {
         state.currentBoard.columns.push(action.payload);
@@ -218,6 +223,7 @@ export const {
   setLoading,
   setError,
   updateBoardName,
+  updateBoardFields,
   
   // Пользователь
   setCurrentUser,

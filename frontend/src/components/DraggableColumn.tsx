@@ -4,26 +4,25 @@ import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Column as ColumnType, Task as TaskType } from '../../../shared/types';
 import Task from './Task';
 import { ItemTypes } from '../App';
-import { setColumn  } from '../store/boardSlice';
+import {  updateColumn  } from '../store/boardSlice';
 import { useAppDispatch } from '../store/hooks';
 
 
 interface DraggableColumnProps {
   column: ColumnType;
   index: number;
-  boardId: string;
-  onMoveTask: (taskId: string, sourceColumnId: string, targetColumnId: string) => void;
+  boardId: number;
+  onMoveTask: (taskId: number, sourceColumnId: number, targetColumnId: number) => void;
   onMoveColumn: (dragIndex: number, hoverIndex: number) => void;
-  onUpdateTask: (columnId: string, updatedTask: TaskType) => void;
-  
+  onUpdateTask: (columnId: number, updatedTask: TaskType) => void;
 }
 
 interface DragItem {
   index: number;
-  id: string;
+  id: number;
   type: string;
-  columnId?: string;
-  taskId?: string;
+  columnId?: number;
+  taskId?: number;
 }
 
 
@@ -104,9 +103,9 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
 
   // Обновление заголовка колонки
   const handleTitleChange = (newTitle: string) => {
-    dispatch(setColumn({
-      boardId,
-      column: { ...column, title: newTitle }
+    dispatch(updateColumn({ 
+      ...column, 
+      title: newTitle 
     }));
   };
 
