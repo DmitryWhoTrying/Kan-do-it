@@ -25,6 +25,7 @@ export class PrimaBoardUserRepository implements IboardUserRepository{
     }
 
     async findByUser(userID: number): Promise<BoardUser[] | null> {
+        
         const prismaBoardUsers = await this.prisma.boardUser.findMany({
             where:
             {

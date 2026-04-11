@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { boardService } from '../services/board-service';
 import { Board } from '../../../shared/types';
+import { socketService } from '../socket/socket-service';
+import { authService } from '../services/auth-service';
+import { logout } from '../store/boardSlice';
+
 
 const BoardsPage: React.FC = () => {
   const [boards, setBoards] = useState<Board[]>([]);
@@ -12,6 +16,7 @@ const BoardsPage: React.FC = () => {
   
   const navigate = useNavigate();
   const currentUser = useAppSelector(state => state.board.currentUser);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const loadBoards = async () => {
@@ -19,7 +24,9 @@ const BoardsPage: React.FC = () => {
         console.log("Tryin to load boards page");
         setLoading(true);
         // Загружаем доски, где пользователь является участником
+        console.log("Tryin to load boards of user", currentUser);
         const userBoards = await boardService.getByUser(currentUser?.userId || -1);
+        console.log("got boards", userBoards);
         setBoards(userBoards);
       } catch (err: any) {
         setError(err.message || 'Failed to load boards');
@@ -51,9 +58,22 @@ const BoardsPage: React.FC = () => {
       });
       navigate(`/board/${newBoard.id}`);
     } catch (err) {
-      alert('Не удалось создать доску');
+      alert('Не удалось создать доску' + err);
     }
   };
+
+  const handleLogOut = async()=> {
+    const confirmed = window.confirm('Вы уверены, что хотите выйти?');
+    if (!confirmed) 
+      return;
+
+    socketService.disconnect();
+    authService.clearToken();
+
+    dispatch(logout());
+
+    navigate('/login');
+  }
 
   if (loading) return <div>Загрузка досок...</div>;
   if (error) return <div>Ошибка: {error}</div>;
@@ -64,7 +84,7 @@ const BoardsPage: React.FC = () => {
         <h1>Kan-do-it</h1>
         <nav>
           <span>{currentUser?.userName}</span>
-          <button onClick={() => navigate('/login')}>Выйти</button>
+          <button onClick={handleLogOut}>Выйти</button>
         </nav>
       </header>
 

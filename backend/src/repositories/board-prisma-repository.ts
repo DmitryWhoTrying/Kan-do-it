@@ -72,7 +72,8 @@ export class PrismaBoardRepository implements IBoardRepository{
                 }
             }
         );
-        
+        console.log('found boards', prismaBoards);
+
         if (!prismaBoards)
             return [];
 
@@ -108,16 +109,19 @@ export class PrismaBoardRepository implements IBoardRepository{
     }
     
     async create(board: Omit<Board, "id" | "createdAt">): Promise<Board> {
+        console.log('Trying to create board', board);
+
         try{
             const prismaBoard = this.prisma.board.create({
                 data:{
                     name: board.name,
                     users: {
-                        create: board.users.map(usr =>({
-                            userId: usr.userId,
-                            user: usr.userName,
-                            permission: BoardUserMapper.mapPrismaPermission(usr.permission)
-                        }))
+                        createMany: {
+                            data: board.users.map(usr => ({
+                                userId: usr.userId,
+                                permission: BoardUserMapper.mapPrismaPermission(usr.permission)
+                            }))
+                        }
                     }
                 }
             });
@@ -129,6 +133,8 @@ export class PrismaBoardRepository implements IBoardRepository{
             throw ex;
         }
     }
+
+    
     async update(id: number, data: Partial<Board>): Promise<Board | null> {
         try{
             const updateData: Prisma.BoardUpdateInput={

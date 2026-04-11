@@ -35,6 +35,7 @@ export class BoardService {
   /** Получить доски, где пользователь является участником */
   async getByUser(userId: number): Promise<Board[]> {
     const response = await apiClient.get<ApiResponse<Board[]>>(`${this.boardEndpoint}/user/${userId}`);
+    console.log('request result:', response);
     return response.data.data || [];
   }
 
