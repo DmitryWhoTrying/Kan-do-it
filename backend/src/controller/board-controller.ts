@@ -14,7 +14,7 @@ export class BoardController{
         });
         }
         catch (err){
-            res.status(500).json({success:false, Error: "Cannot get all boards"});
+            res.status(500).json({success:false, error: "Cannot get all boards"});
         }
     }
 
@@ -26,7 +26,7 @@ export class BoardController{
             data:board
             });
         else
-            res.status(404).json({success:false, Error: "not found"});
+            res.status(404).json({success:false, error: "not found"});
     }
 
     async findByUser(req: Request, res: Response){
@@ -68,7 +68,7 @@ export class BoardController{
         if (board)
             res.status(200).json({success: true, data: board});
         else
-            res.status(500).json({success: false, Error: "cannot create board with params "+req.body})
+            res.status(500).json({success: false, error: "cannot create board with params "+req.body})
     }
 
     async updateBoard(req: Request, res: Response){
@@ -81,7 +81,7 @@ export class BoardController{
         else
             res.status(500).json({
                 success:false,
-                Error: "cannot update board with id: " + req.params.id
+                error: "cannot update board with id: " + req.params.id
             });
     }
 
@@ -95,7 +95,7 @@ export class BoardController{
         else
             res.status(500).json({
                 success: false,
-                Error: "cannot delete board with id: " + req.params.id
+                error: "cannot delete board with id: " + req.params.id
             });
     }
 }
