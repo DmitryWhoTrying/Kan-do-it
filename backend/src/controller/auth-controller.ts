@@ -21,11 +21,11 @@ export class AuthController{
         console.log(`[Demo Auth] Password provided for ${username} (ignored)`);
       }
 
-      const result = await this.authService.loginOrRegister(username);
+      const data = await this.authService.loginOrRegister(username);
 
       res.status(200).json({
         success: true,
-         result,
+         data,
       });
     } catch (error: any) {
       res.status(400).json({

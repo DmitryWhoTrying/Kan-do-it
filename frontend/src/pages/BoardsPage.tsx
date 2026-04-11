@@ -16,6 +16,7 @@ const BoardsPage: React.FC = () => {
   useEffect(() => {
     const loadBoards = async () => {
       try {
+        console.log("Tryin to load boards page");
         setLoading(true);
         // Загружаем доски, где пользователь является участником
         const userBoards = await boardService.getByUser(currentUser?.userId || -1);

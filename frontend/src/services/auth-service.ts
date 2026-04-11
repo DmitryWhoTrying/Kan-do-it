@@ -28,6 +28,8 @@ export class AuthService{
       { username, password }
     );
 
+    console.log('auth service post call successfully', response);
+
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.error || 'Authentication failed');
     }

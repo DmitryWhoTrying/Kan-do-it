@@ -51,6 +51,7 @@ export class PrismaBoardRepository implements IBoardRepository{
 
 
     async findByUser(userId: number): Promise<Board[] | null> {
+        console.log("findByUser uid:", userId);
         const prismaBoards = await this.prisma.board.findMany(
             {
                 where:{
@@ -73,7 +74,7 @@ export class PrismaBoardRepository implements IBoardRepository{
         );
         
         if (!prismaBoards)
-            return null;
+            return [];
 
         return new BoardMapper().toDomainMany(prismaBoards);
     }

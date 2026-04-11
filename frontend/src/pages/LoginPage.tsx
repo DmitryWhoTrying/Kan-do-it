@@ -31,12 +31,16 @@ const LoginPage: React.FC = () => {
     setError(null);
     setIsLoading(true);
 
+    console.log('Set states successfully');
+
     try {
       // Вызов сервиса аутентификации
       const { user, token } = await authService.loginOrRegister({ 
         username, 
         password // Отправляем, даже если бэкенд игнорирует
       });
+
+      console.log('Called auth service successfully');
 
       // Сохраняем токен
       authService.saveToken(token);

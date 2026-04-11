@@ -19,7 +19,8 @@ export class BoardController{
     }
 
     async findByUser(req: Request, res: Response){
-        const boards = await this.boardService.getBoardByUser(Number(req.params.id));
+        console.log('Request params: ', req.params, 'request body', req.body);
+        const boards = await this.boardService.getBoardByUser(Number(req.params.userId));
         if (boards)
             res.status(200).json(boards);
         else
@@ -27,6 +28,7 @@ export class BoardController{
     }
 
     async findByOwner(req: Request, res: Response){
+        console.log('Request params: ', req.params);
         const boards = await this.boardService.getBoardByOwner(Number(req.params.id));
         if (boards)
             res.status(200).json(boards);
