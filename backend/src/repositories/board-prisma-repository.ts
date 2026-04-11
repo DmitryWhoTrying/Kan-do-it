@@ -1,4 +1,4 @@
-import { PrismaClient, Permission, Prisma } from '../../generated/prisma/client';
+import { PrismaClient, Permission, Prisma } from '@prisma/client';
 import { IBoardRepository } from "./board-repository.interface";
 import { Board } from "../../../shared/types";
 import { BoardMapper } from '../mappers/BoardMapper';

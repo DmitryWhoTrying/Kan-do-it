@@ -1,5 +1,5 @@
 import { Task } from "../../../shared/types";
-import { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { TaskMapper } from "../mappers/TaskMapper";
 import { ITaskRepository } from "./task-repository.interface";
 

@@ -1,4 +1,4 @@
-import {User as PrismaUser} from "../../generated/prisma/client"
+import {User as PrismaUser} from "@prisma/client"
 import {User} from '../../../shared/types'
 import { IMapper } from "./Mapper.interface";
 

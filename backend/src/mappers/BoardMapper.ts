@@ -1,4 +1,4 @@
-import {Board as PrismaBoard, Column as PrismaColumn, BoardUser as PrismaBoardUser, User as PrismaUser} from "../../generated/prisma/client"
+import {Board as PrismaBoard, Column as PrismaColumn, BoardUser as PrismaBoardUser, User as PrismaUser} from "@prisma/client"
 import {Board} from '../../../shared/types'
 import { ColumnMapper, ColumnWithTasks } from "./ColumnMapper";
 import { IMapper } from "./Mapper.interface";

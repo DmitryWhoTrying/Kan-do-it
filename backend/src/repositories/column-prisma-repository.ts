@@ -1,5 +1,5 @@
 import { Column } from "../../../shared/types";
-import { Prisma, PrismaClient } from "../../generated/prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { ColumnMapper } from "../mappers/ColumnMapper";
 import { IColumnRepository } from "./column-repository.interface";
 

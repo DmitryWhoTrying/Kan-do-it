@@ -1,5 +1,5 @@
 import {BoardUser, User, Board} from "../../../shared/types"
-import {Permission} from '../../generated/prisma/enums'
+import {Permission} from '@prisma/client'
 
 export interface IboardUserRepository
 {    

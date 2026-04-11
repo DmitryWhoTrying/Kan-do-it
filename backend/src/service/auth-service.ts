@@ -1,5 +1,5 @@
 import { IUserRepository } from "src/repositories/user-repository.interface";
-import {User as PrismaUser} from '../../generated/prisma/client';
+import {User as PrismaUser} from '@prisma/client';
 
 export interface AuthResponse {
   user: {

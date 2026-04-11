@@ -1,4 +1,4 @@
-import {Task as PrismaTask} from "../../generated/prisma/client"
+import {Task as PrismaTask} from "@prisma/client"
 import {Task} from '../../../shared/types'
 import { IMapper } from "./Mapper.interface";
 

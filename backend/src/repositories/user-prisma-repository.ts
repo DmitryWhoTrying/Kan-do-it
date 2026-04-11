@@ -1,12 +1,14 @@
 import { use } from "react";
 import { User } from "../../../shared/types";
-import { PrismaClient } from "../../generated/prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { UserMapper } from "../mappers/UserMapper";
 import { IUserRepository } from "./user-repository.interface";
 
 
 export class UserPrismaRepository implements IUserRepository{
-    constructor(private prisma: PrismaClient){};
+    constructor(private prisma: PrismaClient){
+        console.log('Create UserPrismaRepository\nDATABASE_URL:', process.env.DATABASE_URL);
+    };
 
     async findById(userID: number): Promise<User | null> {
         const prismaUser = await this.prisma.user.findUnique({

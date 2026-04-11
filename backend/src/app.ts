@@ -9,6 +9,8 @@ import { createBoardRoutes } from './routes/board.routes';
 import { createUserRoutes } from './routes/user.routes';
 import { createBoardUserRoutes } from './routes/boarduser.routes';
 import { createAuthRoutes } from './routes/auth.routes';
+import 'dotenv/config'
+
 //import { createTaskRoutes } from './routes/task.routes';
 //import { createColumnRoutes } from './routes/column.routes';
 
