@@ -1730,3 +1730,4 @@ backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.js.map
 backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs
 backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs.map
 backend/node_modules/@prisma/client/scripts/default-index.js
+backend/node_modules/@prisma/client/generator-build/index.js

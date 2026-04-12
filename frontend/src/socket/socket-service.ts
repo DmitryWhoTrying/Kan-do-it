@@ -96,6 +96,10 @@ class SocketService {
 
     onBoardUpdated(callback: (data:{boardId: number, board: Partial<Board>}) => void) {
         this.socket?.on('board:updated', callback);
+
+        return () => {
+            this.socket?.off('board:updated', callback);
+        };
     }
 
     onBoardDeleted(callback: (boardId:number) => void){
@@ -122,6 +126,10 @@ class SocketService {
 
     onTaskUpdated(callback: (data: {columnId: number, task: Task}) => void){
         this.socket?.on('task:updated', callback);
+
+        return () => {
+            this.socket?.off('task:updated', callback);
+        };
     }
 
     onTaskDeleted(callback: (data:{taskId: number, columnId: number, boardId: number})=> void){
