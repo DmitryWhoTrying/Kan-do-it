@@ -1,5 +1,5 @@
 // frontend/src/pages/BoardPage.tsx
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 
@@ -11,15 +11,18 @@ import {
   removeTask,
   addTask,
   updateColumnsOrder,
+  addColumn,
   updateTask as updateTaskAction,
   updateBoardFields,
-  setCurrentUser
+  setCurrentUser,
+  logout
 } from '../store/boardSlice';
 import { boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
 import { Column as ColumnType, Task } from '../../../shared/types';
+import { authService } from '../services/auth-service';
 
 export const ItemTypes = {
   TASK: 'task',
@@ -34,6 +37,8 @@ const BoardPage: React.FC = () => {
   
   console.log('Called selectors');
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [newColumnTitle, setNewColumnTitle] = useState('');
 
   // Загрузка доски при монтировании
   useEffect(() => {
@@ -152,15 +157,74 @@ const BoardPage: React.FC = () => {
   const handleBoardTitleChange = (newName: string) => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
-    
-    // Дебаунс и отправка на сервер можно добавить здесь
   };
 
-  const handleLogout = () => {
-    socketService.disconnect();
-    dispatch(clearBoard());
-    navigate('/login');
+
+ const handleLogout = () => {
+  const confirmed = window.confirm('Вы уверены, что хотите выйти?');
+    if (!confirmed) 
+      return;
+  
+  console.log('🚪 Logging out...');
+
+  socketService.disconnect();
+  authService.clearToken();
+
+  dispatch(logout());
+  
+  //Перенаправляем на страницу входа
+  navigate('/login');
+};
+
+  const handleAddColumn = useCallback(async () => {
+    if (!currentBoard || !newColumnTitle.trim()) return;
+
+    try {
+      setIsAddingColumn(true);
+      
+      // Определяем порядок (последняя колонка + 1)
+      const maxOrder = currentBoard.columns.reduce(
+        (max, col) => Math.max(max, col.order || 0), 
+        -1
+      );
+      const newOrder = maxOrder + 1;
+
+      // Создаём колонку на сервере
+      const newColumn = await boardService.addColumn(currentBoard.id, {
+        title: newColumnTitle.trim(),
+        order: newOrder,
+        tasks: []
+      });
+
+      // Добавляем в Redux
+      dispatch(addColumn(newColumn));
+      
+      // Очищаем поле ввода
+      setNewColumnTitle('');
+      
+      // Отправляем через сокет для синхронизации
+      socketService.createColumn(currentBoard.id, newColumn);
+      
+    } catch (err: any) {
+      console.error('Failed to create column:', err);
+      dispatch(setError(err.message || 'Failed to create column'));
+    } finally {
+      setIsAddingColumn(false);
+    }
+  }, [currentBoard, newColumnTitle, dispatch]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddColumn();
+    }
   };
+
+
+  //const handleColumnDelete = () => {};
+
+  //const handleTaskCreate = () => {};
+  //const handleTaskDelete = () => {};
 
   // === Рендеринг ===
 
@@ -174,7 +238,7 @@ const BoardPage: React.FC = () => {
         <h1 className="header-logo">Kan-do-it</h1>
         <nav>
           <span>{currentUser?.userName ?? "Гость"}</span>
-          <button onClick={handleLogout}>Выйти</button>
+          <button name='log-out-btn' onClick={handleLogout}>Выйти</button>
         </nav>
       </header>
 

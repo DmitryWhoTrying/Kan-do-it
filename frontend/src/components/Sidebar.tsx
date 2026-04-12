@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Sidebar: React.FC = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsExpanded(!isExpanded);
@@ -14,7 +17,11 @@ const Sidebar: React.FC = () => {
         <span className="text">Свернуть</span>
       </button>
       
-      <div className="menu-item">
+      <div 
+        className="menu-item" 
+        onKeyDown={(e)=> e.key === 'Enter' && navigate(`/boards/`)}
+        onClick={() => navigate('/boards/')}
+        >
         <span className="icon">🏠</span>
         <span className="text">Доски</span>
       </div>
