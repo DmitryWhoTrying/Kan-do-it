@@ -3,105 +3,122 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 
-  setBoard, 
-  clearBoard, 
-  setLoading, 
-  setError,
-  updateBoardName,
-  removeTask,
-  addTask,
-  updateColumnsOrder,
-  addColumn,
-  updateTask as updateTaskAction,
-  updateBoardFields,
-  setCurrentUser,
-  logout
+  setBoard, clearBoard, setLoading, setError,
+  updateBoardName, removeTask, addTask, addColumn,
+  updateColumnsOrder, updateTask as updateTaskAction,
+  updateBoardFields, setCurrentUser, logout, updateColumn
 } from '../store/boardSlice';
 import { boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
-import { Column as ColumnType, Task } from '../../../shared/types';
+import { Board, Column, Column as ColumnType, Task } from '../../../shared/types';
 import { authService } from '../services/auth-service';
 
-export const ItemTypes = {
-  TASK: 'task',
-  COLUMN: 'column'
-};
+export const ItemTypes = { TASK: 'task', COLUMN: 'column' };
 
 const BoardPage: React.FC = () => {
-  console.log('Called board create');
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  console.log('Called selectors');
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
+  
+  // Состояние для добавления колонки
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
 
-  // Загрузка доски при монтировании
+  // === Загрузка доски и подписка на сокеты ===
   useEffect(() => {
-    console.log('loading board use effect called');
-    if (!boardId) return;
+    if (!boardId || currentBoard?.id === Number(boardId)) return;
 
-    console.log('Trying to load board');
     const loadBoard = async () => {
       try {
-        console.log('load board try block');
         dispatch(setLoading(true));
         const board = await boardService.getById(Number(boardId));
         dispatch(setBoard(board));
         
-        // Найти текущего пользователя в списке участников
-        const user = board.users.find(u => u.userId === currentUser?.userId);
-        console.log('got user', user);
-        if (user) {
-          console.log('Dispatching setCurrentUser...', user);
-          try {
-            dispatch(setCurrentUser(user));
-            console.log('✅ setCurrentUser dispatched successfully');
-          } catch (e) {
-            console.error('❌ Error in setCurrentUser:', e);
-          }
+        const user = board.users?.find(u => u.userId === currentUser?.userId);
+        if (user && user.userId !== currentUser?.userId) {
+          dispatch(setCurrentUser(user));
         }
         
-        console.log('joining socket');
-        // Присоединиться к сокет-комнате
         socketService.joinBoard(Number(boardId));
-        console.log('joined socket successfully');
       } catch (err: any) {
-        console.log('got error', err);
         dispatch(setError(err.message || 'Failed to load board'));
       } finally {
-        console.log('finally block joined');
         dispatch(setLoading(false));
       }
     };
 
-    console.log('Called load board');
     loadBoard();
 
-    // Подписка на socket-события
-    const unsubscribeTask = socketService.onTaskUpdated((updatedTask) => {
-      dispatch(updateTaskAction({ taskId: updatedTask.task.id, updates: updatedTask.task }));
-    });
-
-    const unsubscribeBoard = socketService.onBoardUpdated((updatedBoard) => {
-      dispatch(updateBoardFields(updatedBoard.board));
-    });
-
-    // Очистка
-    console.log('called return func');
-    return () => {
-      unsubscribeTask();
-      unsubscribeBoard();
-      //socketService.leaveBoard(Number(boardId));
-      //dispatch(clearBoard());
+    // ✅ ЕДИНАЯ подписка на все сокет-события
+    const handlers = {
+      onTaskUpdated: (payload: { task: Task }) => {
+        dispatch(updateTaskAction({ 
+          taskId: payload.task.id, 
+          updates: payload.task 
+        }));
+      },
+      onBoardUpdated: (payload: { board: Partial<Board> }) => {
+        if (payload.board?.id !== currentBoard?.id) {
+          dispatch(updateBoardFields(payload.board));
+        }
+      },
+      onColumnCreated: (column: Column) => {
+        dispatch(addColumn(column));
+      },
+      onColumnUpdated: (column: Column) => {
+        dispatch(updateColumn(column));
+      },
+      onColumnDeleted: (payload: { columnId: number }) => {
+        // dispatch(removeColumn(payload.columnId)); // если есть такой экшен
+      },
     };
-  }, [boardId, dispatch]);
 
-  // === Обработчики ===
+    socketService.onTaskUpdated(handlers.onTaskUpdated);
+    socketService.onBoardUpdated(handlers.onBoardUpdated);
+    socketService.onColumnCreated(handlers.onColumnCreated);
+    socketService.onColumnUpdated(handlers.onColumnUpdated);
+    //socketService.onColumnDeleted(handlers.onColumnDeleted);
+
+    // ✅ Очистка: отписываемся от ВСЕХ событий
+    return () => {
+      socketService.off('task:updated');
+      socketService.off('board:updated');
+      socketService.off('column:created');
+      socketService.off('column:updated');
+      socketService.off('column:deleted');
+    };
+  }, [boardId, dispatch, currentBoard?.id, currentUser?.userId]);
+
+  // === Обработчики CRUD (только HTTP, без socket.emit) ===
+
+  const handleAddColumn = useCallback(async () => {
+    if (!currentBoard || !newColumnTitle.trim()) return;
+
+    try {
+      setIsAddingColumn(true);
+      
+      const maxOrder = Math.max(-1, ...currentBoard.columns.map(c => c.order || 0));
+      
+      // ✅ Только HTTP-запрос — бэкенд сам уведомит через сокет
+      const newColumn = await boardService.addColumn(currentBoard.id, {
+        title: newColumnTitle.trim(),
+        order: maxOrder + 1,
+      });
+
+      dispatch(addColumn(newColumn));
+      setNewColumnTitle('');
+      // ❌ НЕ вызываем socketService.createColumn() — бэкенд сам сделает emit
+      
+    } catch (err: any) {
+      dispatch(setError(err.message || 'Failed to create column'));
+    } finally {
+      setIsAddingColumn(false);
+    }
+  }, [currentBoard, newColumnTitle, dispatch]);
 
   const moveTask = useCallback((taskId: number, sourceColumnId: number, targetColumnId: number) => {
     if (!currentBoard) return;
@@ -114,121 +131,56 @@ const BoardPage: React.FC = () => {
     const targetColumn = currentBoard.columns.find(col => col.id === targetColumnId);
     taskToMove.order = targetColumn ? targetColumn.tasks.length : 0;
 
+    // Оптимистичное обновление локального стейта
     dispatch(removeTask({ columnId: sourceColumnId, taskId: task.id }));
     dispatch(addTask({ columnId: targetColumnId, task: taskToMove }));
 
-    // Отправка на сервер для синхронизации
-    socketService.updateTask(
-      taskId,
-      targetColumnId,
-      currentBoard.id,
-      {
-        order: taskToMove.order
-      }
-    );
+    // ✅ Только HTTP — бэкенд уведомит остальных
+    boardService.updateTask(currentBoard.id, targetColumnId, taskId, { order: taskToMove.order });
+
   }, [currentBoard, dispatch]);
 
   const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
     if (!currentBoard) return;
 
-    const sortedColumns = [...currentBoard.columns].sort((a, b) => (a.order || 0) - (b.order || 0));
-    const newColumns = [...sortedColumns];
-    const [removed] = newColumns.splice(dragIndex, 1);
-    newColumns.splice(hoverIndex, 0, removed);
-
-    const updatedColumns = newColumns.map((col, idx) => ({ ...col, order: idx }));
-    dispatch(updateColumnsOrder(updatedColumns));
+    const sorted = [...currentBoard.columns].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const [moved] = sorted.splice(dragIndex, 1);
+    sorted.splice(hoverIndex, 0, moved);
+    
+    const updated = sorted.map((col, idx) => ({ ...col, order: idx }));
+    dispatch(updateColumnsOrder(updated));
+    
+    //new order (optional)
+    boardService.updateColumnsOrder(currentBoard.id, updated);
   }, [currentBoard, dispatch]);
 
   const handleUpdateTask = useCallback((columnId: number, updatedTask: Task) => {
+    // Оптимистичное обновление
     dispatch(updateTaskAction({ taskId: updatedTask.id, updates: updatedTask }));
     
-    // Опционально: отправить на сервер
+    // Синхронизация с сервером через HTTP
     if (currentBoard) {
-      socketService.updateTask(
-        updatedTask.id,
-        columnId,
-        currentBoard.id,
-        updatedTask
-      );
+      boardService.updateTask(currentBoard.id, columnId, updatedTask.id, updatedTask);
     }
   }, [dispatch, currentBoard]);
 
   const handleBoardTitleChange = (newName: string) => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
+    // Опционально нихуя не опционально: отправка на сервер с дебаунсом
   };
 
-
- const handleLogout = () => {
-  const confirmed = window.confirm('Вы уверены, что хотите выйти?');
-    if (!confirmed) 
-      return;
-  
-  console.log('🚪 Logging out...');
-
-  socketService.disconnect();
-  authService.clearToken();
-
-  dispatch(logout());
-  
-  //Перенаправляем на страницу входа
-  navigate('/login');
-};
-
-  const handleAddColumn = useCallback(async () => {
-    if (!currentBoard || !newColumnTitle.trim()) return;
-
-    try {
-      setIsAddingColumn(true);
-      
-      // Определяем порядок (последняя колонка + 1)
-      const maxOrder = currentBoard.columns.reduce(
-        (max, col) => Math.max(max, col.order || 0), 
-        -1
-      );
-      const newOrder = maxOrder + 1;
-
-      // Создаём колонку на сервере
-      const newColumn = await boardService.addColumn(currentBoard.id, {
-        title: newColumnTitle.trim(),
-        order: newOrder,
-        tasks: []
-      });
-
-      // Добавляем в Redux
-      dispatch(addColumn(newColumn));
-      
-      // Очищаем поле ввода
-      setNewColumnTitle('');
-      
-      // Отправляем через сокет для синхронизации
-      socketService.createColumn(currentBoard.id, newColumn);
-      
-    } catch (err: any) {
-      console.error('Failed to create column:', err);
-      dispatch(setError(err.message || 'Failed to create column'));
-    } finally {
-      setIsAddingColumn(false);
-    }
-  }, [currentBoard, newColumnTitle, dispatch]);
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleAddColumn();
-    }
+  const handleLogout = () => {
+    if (!window.confirm('Вы уверены, что хотите выйти?')) return;
+    
+    socketService.disconnect();
+    authService.clearToken();
+    dispatch(logout());
+    navigate('/login');
   };
-
-
-  //const handleColumnDelete = () => {};
-
-  //const handleTaskCreate = () => {};
-  //const handleTaskDelete = () => {};
 
   // === Рендеринг ===
-
-  if (isLoading) return <div className="loading">Загрузка доски...</div>;
+  if (isLoading) return <div className="loading">Загрузка...</div>;
   if (error) return <div className="error">Ошибка: {error}</div>;
   if (!currentBoard) return <div className="error">Доска не найдена</div>;
 
@@ -238,7 +190,7 @@ const BoardPage: React.FC = () => {
         <h1 className="header-logo">Kan-do-it</h1>
         <nav>
           <span>{currentUser?.userName ?? "Гость"}</span>
-          <button name='log-out-btn' onClick={handleLogout}>Выйти</button>
+          <button onClick={handleLogout}>Выйти</button>
         </nav>
       </header>
 
@@ -262,14 +214,53 @@ const BoardPage: React.FC = () => {
               .map((column: ColumnType, index: number) => (
                 <DraggableColumn
                   key={column.id}
-                  column={column}
                   index={index}
+                  column={column}
                   boardId={currentBoard.id}
                   onMoveTask={moveTask}
                   onMoveColumn={moveColumn}
                   onUpdateTask={handleUpdateTask}
                 />
               ))}
+            
+            {/* ✅ Кнопка добавления колонки */}
+            <div className="add-column">
+              {isAddingColumn ? (
+                <div className="add-column-form">
+                  <input
+                    type="text"
+                    placeholder="Название колонки"
+                    value={newColumnTitle}
+                    onChange={(e) => setNewColumnTitle(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleAddColumn()}
+                    autoFocus
+                    className="column-input"
+                  />
+                  <div className="add-column-actions">
+                    <button 
+                      onClick={handleAddColumn}
+                      disabled={!newColumnTitle.trim() || isAddingColumn}
+                      className="btn-add"
+                    >
+                      Добавить
+                    </button>
+                    <button 
+                      onClick={() => { setNewColumnTitle(''); setIsAddingColumn(false); }}
+                      className="btn-cancel"
+                    >
+                      Отмена
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => setIsAddingColumn(true)}
+                  className="btn-add-column"
+                >
+                  + Добавить колонку
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

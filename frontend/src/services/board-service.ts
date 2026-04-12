@@ -139,6 +139,21 @@ export class BoardService {
       throw new Error(response.data.error || 'Failed to remove user from board');
     }
   }
+
+
+  //колоночность
+  async addColumn(boardId: number, column: Omit<Column, 'id' | 'tasks'>): Promise<Column> {
+  const response = await apiClient.post<ApiResponse<Column>>(
+    `${this.boardEndpoint}/${boardId}/columns`,
+    column
+  );
+  
+  if (!response.data.success || !response.data.data) {
+    throw new Error(response.data.error || 'Failed to add column');
+  }
+  
+  return response.data.data;
+}
 }
 
 // Экспорт singleton-инстанса

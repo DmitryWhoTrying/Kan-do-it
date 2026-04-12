@@ -5,6 +5,8 @@ import { Column } from "../../../shared/types";
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
+
+//это было ошибкой, создание должно быть в http тут нужен ебануто плотный рефактор
 export class ColumnSocketController {
     constructor(
         private columnService: ColumnService,
@@ -13,12 +15,7 @@ export class ColumnSocketController {
 
     handleCreate = async (socket: TypedSocket, data:{boardId: number, column: Column}) => {
         try {
-            const createdColumn = await this.columnService.create(data.column, data.boardId);
-
-            if (!createdColumn)
-                return socket.emit('error', 'Column not created, board id not found');
-
-            socket.to(`board:${data.boardId}`).emit('column:created', createdColumn);
+            socket.to(`board:${data.boardId}`).emit('column:created', data.column);
             socket.emit('column:create:success', data.column);
         }
         catch (error){

@@ -107,9 +107,12 @@ class SocketService {
     }
 
     //column
-    onColumnCreated(callback: (column: Column) => void){
-        this.socket?.on('column:created', callback);        
-    }
+    onColumnCreated(callback: (column: Column) => void): () => void {
+        this.socket?.on('column:created', callback);
+        return () => {
+            this.socket?.off('column:created', callback);
+         };
+  }
     
     onColumnUpdated(callback:(column: Column) => void){
         this.socket?.on('column:updated', callback);
@@ -146,9 +149,13 @@ class SocketService {
     }
 
     //column
-    onColumnCreateSuccess(callback: (column: Column) => void){
+    onColumnCreatedSuccess(callback: (column: Column) => void): () => void {
         this.socket?.on('column:create:success', callback);
+        return () => {
+            this.socket?.off('column:create:success', callback);
+        };
     }
+    
     onColumnUpdateSuccess(callback: (column: Column) => void){
         this.socket?.on('column:update:success', callback);
     }
