@@ -4,7 +4,8 @@ To run front-end react server:
 
 <..\Kan-do-it> cd frontend
 <..\Kan-do-it\frontend> npm install
-<..\Kan-do-it\frontend> --npm start
+<..\Kan-do-it\frontend> npm run dev
+
 
 
 To run back-end prisma-db:
