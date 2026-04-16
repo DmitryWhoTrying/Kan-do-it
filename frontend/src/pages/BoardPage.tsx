@@ -6,7 +6,8 @@ import {
   setBoard, clearBoard, removeColumn, setLoading, setError,
   updateBoardName, removeTask, addTask, addColumn,
   updateColumnsOrder, updateTask as updateTaskAction,
-  updateBoardFields, setCurrentUser, logout, updateColumn
+  updateBoardFields, setCurrentUser, logout, updateColumn,
+  updateTask
 } from '../store/boardSlice';
 import { boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
@@ -77,6 +78,14 @@ const BoardPage: React.FC = () => {
       },
       onColumnDeleted: (columnId: number) => {
         dispatch(removeColumn(columnId));
+      },
+
+      OnTaskCreated:(data:{columnId: number, task: Task}) =>{
+        dispatch(addTask(data));
+      },
+
+      onTaskDeleted: (data:{taskId: number, columnId: number, boardId: number}) => {
+        dispatch(removeTask(data));
       }
     };
 
@@ -86,6 +95,8 @@ const BoardPage: React.FC = () => {
     socketService.onColumnCreated(handlers.onColumnCreated);
     socketService.onColumnUpdated(handlers.onColumnUpdated);
     socketService.onColumnDeleted(handlers.onColumnDeleted);
+    socketService.onTaskCreated(handlers.OnTaskCreated);
+    socketService.onTaskDeleted(handlers.onTaskDeleted);
 
     // Очистка: отписываемся от ВСЕХ событий
     return () => {
