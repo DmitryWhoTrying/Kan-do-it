@@ -10,7 +10,7 @@ export function createColumnRoutes(columnController: ColumnController): Router{
 
     router.post('/', columnController.create.bind(columnController));
     router.put('/:columnId', columnController.update.bind(columnController));
-    router.delete('/:columnId', columnController.delete.bind(columnController));
+    router.delete('/:columnId/board/:boardId', columnController.delete.bind(columnController));
 
     return router;
 }

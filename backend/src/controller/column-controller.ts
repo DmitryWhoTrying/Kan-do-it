@@ -24,7 +24,7 @@ export class ColumnController{
         if (column)
         {
             res.status(200).json({success:true, data:column});
-            this.socketEmmiter.emitColumnUpdated(req.body.columnId, column);
+            this.socketEmmiter.emitColumnUpdated(req.body.boardId, column);
         }
         else
             res.status(500).json({success:false, error: "Cannot update column with data: " + req.body.columnId + ' ' + req.body.column})

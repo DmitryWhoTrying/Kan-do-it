@@ -13,7 +13,7 @@ export function createTaskRoutes(taskController: TaskController): Router{
 
     router.post('/', taskController.create.bind(taskController));
     router.put('/:taskId', taskController.update.bind(taskController));
-    router.delete('/:taskId', taskController.delete.bind(taskController));
+    router.delete('/:taskId/column/:columnId/board/:boardId', taskController.delete.bind(taskController));
 
     return router;
 }

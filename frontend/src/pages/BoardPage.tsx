@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 
-  setBoard, clearBoard, setLoading, setError,
+  setBoard, clearBoard, removeColumn, setLoading, setError,
   updateBoardName, removeTask, addTask, addColumn,
   updateColumnsOrder, updateTask as updateTaskAction,
   updateBoardFields, setCurrentUser, logout, updateColumn
@@ -53,7 +53,7 @@ const BoardPage: React.FC = () => {
 
     loadBoard();
 
-    // ✅ ЕДИНАЯ подписка на все сокет-события
+    // ЕДИНАЯ подписка на все сокет-события
     const handlers = {
       onTaskUpdated: (payload: { task: Task }) => {
         dispatch(updateTaskAction({ 
@@ -61,10 +61,13 @@ const BoardPage: React.FC = () => {
           updates: payload.task 
         }));
       },
-      onBoardUpdated: (payload: { board: Partial<Board> }) => {
-        if (payload.board?.id !== currentBoard?.id) {
-          dispatch(updateBoardFields(payload.board));
-        }
+      onBoardUpdated: (board: Board) => {
+        //if (board?.id !== currentBoard?.id) {
+        dispatch(updateBoardFields(board));
+        //}
+      },
+      onBoardDeleted:(boardId: Number) => {
+        alert("Доска была удалена её владельцем!\nЛюбые изменения сохранены НЕ БУДУТ");
       },
       onColumnCreated: (column: Column) => {
         dispatch(addColumn(column));
@@ -72,18 +75,19 @@ const BoardPage: React.FC = () => {
       onColumnUpdated: (column: Column) => {
         dispatch(updateColumn(column));
       },
-      onColumnDeleted: (payload: { columnId: number }) => {
-        // dispatch(removeColumn(payload.columnId)); // если есть такой экшен
-      },
+      onColumnDeleted: (columnId: number) => {
+        dispatch(removeColumn(columnId));
+      }
     };
 
     socketService.onTaskUpdated(handlers.onTaskUpdated);
     socketService.onBoardUpdated(handlers.onBoardUpdated);
+    socketService.onBoardDeleted(handlers.onBoardDeleted);
     socketService.onColumnCreated(handlers.onColumnCreated);
     socketService.onColumnUpdated(handlers.onColumnUpdated);
-    //socketService.onColumnDeleted(handlers.onColumnDeleted);
+    socketService.onColumnDeleted(handlers.onColumnDeleted);
 
-    // ✅ Очистка: отписываемся от ВСЕХ событий
+    // Очистка: отписываемся от ВСЕХ событий
     return () => {
       socketService.off('task:updated');
       socketService.off('board:updated');
@@ -103,7 +107,7 @@ const BoardPage: React.FC = () => {
       
       const maxOrder = Math.max(-1, ...currentBoard.columns.map(c => c.order || 0));
       
-      // ✅ Только HTTP-запрос — бэкенд сам уведомит через сокет
+      // Только HTTP-запрос — бэкенд сам уведомит через сокет
       const newColumn = await boardService.addColumn(currentBoard.id, {
         title: newColumnTitle.trim(),
         order: maxOrder + 1,
@@ -111,7 +115,7 @@ const BoardPage: React.FC = () => {
 
       dispatch(addColumn(newColumn));
       setNewColumnTitle('');
-      // ❌ НЕ вызываем socketService.createColumn() — бэкенд сам сделает emit
+      // НЕ вызываем socketService.createColumn() — бэкенд сам сделает emit
       
     } catch (err: any) {
       dispatch(setError(err.message || 'Failed to create column'));
@@ -135,7 +139,7 @@ const BoardPage: React.FC = () => {
     dispatch(removeTask({ columnId: sourceColumnId, taskId: task.id }));
     dispatch(addTask({ columnId: targetColumnId, task: taskToMove }));
 
-    // ✅ Только HTTP — бэкенд уведомит остальных
+    // Только HTTP — бэкенд уведомит остальных
     boardService.updateTask(currentBoard.id, targetColumnId, taskId, { order: taskToMove.order });
 
   }, [currentBoard, dispatch]);
@@ -151,7 +155,7 @@ const BoardPage: React.FC = () => {
     dispatch(updateColumnsOrder(updated));
     
     //new order (optional)
-    boardService.updateColumnsOrder(currentBoard.id, updated);
+    boardService.update(currentBoard.id, {columns:updated});
   }, [currentBoard, dispatch]);
 
   const handleUpdateTask = useCallback((columnId: number, updatedTask: Task) => {
@@ -167,7 +171,12 @@ const BoardPage: React.FC = () => {
   const handleBoardTitleChange = (newName: string) => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
-    // Опционально нихуя не опционально: отправка на сервер с дебаунсом
+    //посылаем обновку на сервер
+    try{boardService.update(currentBoard.id, {name: newName});}
+    catch (err : any)
+    {
+      alert("Не удалось изменить название колонки");
+    }    
   };
 
   const handleLogout = () => {

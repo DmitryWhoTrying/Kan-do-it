@@ -1,6 +1,7 @@
 // frontend/src/services/board.service.ts
 import apiClient from './api';
 import { Board, BoardUser, Column, Task} from '../../../shared/types';
+import { socketService } from '../socket/socket-service';
 
 // Тип для ответа API (единый формат)
 interface ApiResponse<T> {
@@ -11,6 +12,8 @@ interface ApiResponse<T> {
 
 export class BoardService {
   private readonly boardEndpoint = '/boards';
+  private readonly columnEndpoint = '/columns';
+  private readonly taskEndpoint = '/tasks';
   private readonly boardUserEndpoint = '/boardUsers';
 
   // === GET запросы ===
@@ -122,7 +125,7 @@ export class BoardService {
       `${this.boardUserEndpoint}/boards/${boardId}/users/${userId}`,
       { permission }
     );
-    
+
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.error || 'Failed to update permission');
     }
@@ -143,17 +146,81 @@ export class BoardService {
 
   //колоночность
   async addColumn(boardId: number, column: Omit<Column, 'id' | 'tasks'>): Promise<Column> {
-  const response = await apiClient.post<ApiResponse<Column>>(
-    `${this.boardEndpoint}/${boardId}/columns`,
-    column
+    const response = await apiClient.post<ApiResponse<Column>>(
+    `${this.columnEndpoint}/`,
+    {column, boardId}
   );
   
-  if (!response.data.success || !response.data.data) {
-    throw new Error(response.data.error || 'Failed to add column');
+    if (!response.data.success || !response.data.data) {
+      throw new Error(response.data.error || 'Failed to add column');
+    }
+    
+    return response.data.data;
   }
-  
-  return response.data.data;
-}
+
+  async updateColumn(boardId: number, columnId: number, column: Partial<Column>): Promise<Column>{
+    const response = await apiClient.put<ApiResponse<Column>>
+    (`${this.columnEndpoint}/${columnId}`,
+      {columnId, column, boardId}
+    )
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to update column');
+    }
+
+    return response.data.data;
+  }
+
+  async deleteColumn(boardId: number, columnId: number):Promise<Boolean>{
+    const response = await apiClient.delete<ApiResponse<Boolean>>
+    (`${this.columnEndpoint}/${columnId}/board/${boardId}`,
+    );
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to delete column');
+    }
+
+    return response.data.data;
+  }
+
+  //тасочки
+  async createTask(boardId: number, columnId: number, task: Omit<Task,'id' | 'createdAt'>):Promise<Task>{
+    const response = await apiClient.post<ApiResponse<Task>>(
+      `${this.taskEndpoint}/`,
+      {columnId, boardId, task}
+    );
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to create task');
+    } 
+
+    return response.data.data;
+  }
+
+  async updateTask(boardId:number, columnId: number, taskId:number, data: Partial<Task>):Promise<Task>{
+    const response = await apiClient.put<ApiResponse<Task>>(
+      `${this.taskEndpoint}/${taskId}`,
+      {columnId, boardId, task: data}
+    );
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to update task');
+    }
+
+    return response.data.data;
+  }
+
+  async deleteTask(boardId: number, columnId: number, taskId: number):Promise<Boolean>{
+    const response = await apiClient.delete<ApiResponse<Boolean>>(
+      `${this.taskEndpoint}/column/:columnId/board/:boardId`
+    );
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to delete task');
+    }
+
+    return response.data.data;
+  }
 }
 
 // Экспорт singleton-инстанса

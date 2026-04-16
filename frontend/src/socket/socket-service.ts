@@ -29,6 +29,7 @@ class SocketService {
 
         this.socket.on('disconnect', (reason) => {
             console.warn('Socket disconnected:', reason);
+            alert('Потеряно соединение c сокетом! Bo избежание рассинхронизации перезагрузите страницу');
         });
 
         this.socket.on('connect_error', (err) => {
@@ -94,7 +95,7 @@ class SocketService {
         this.socket?.on('board:state', callback);
     }
 
-    onBoardUpdated(callback: (data:{boardId: number, board: Partial<Board>}) => void) {
+    onBoardUpdated(callback: (board: Board) => void) {
         this.socket?.on('board:updated', callback);
 
         return () => {
@@ -103,7 +104,7 @@ class SocketService {
     }
 
     onBoardDeleted(callback: (boardId:number) => void){
-        this.socket?.on('board:delete:success', callback);
+        this.socket?.on('board:deleted', callback);
     }
 
     //column
