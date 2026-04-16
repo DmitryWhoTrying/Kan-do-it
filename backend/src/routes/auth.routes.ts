@@ -4,13 +4,8 @@ import { AuthService } from 'src/service/auth-service';
 import { UserPrismaRepository } from 'src/repositories/user-prisma-repository';
 import {prisma} from '../lib/prisma'
 
-export function createAuthRoutes():Router{
+export function createAuthRoutes(authController: AuthController):Router{
     const router = Router();
-
-  // Dependency injection
-  const userRepository = new UserPrismaRepository(prisma);
-  const authService = new AuthService(userRepository);
-  const authController = new AuthController(authService);
 
   // Публичные роуты
   router.post('/login', authController.loginOrRegister.bind(authController));

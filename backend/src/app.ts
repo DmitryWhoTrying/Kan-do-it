@@ -11,14 +11,42 @@ import { createBoardUserRoutes } from './routes/boarduser.routes';
 import { createAuthRoutes } from './routes/auth.routes';
 import 'dotenv/config'
 
-//import { createTaskRoutes } from './routes/task.routes';
-//import { createColumnRoutes } from './routes/column.routes';
-
 import dotenv from 'dotenv';
+import { createColumnRoutes } from './routes/column.routes';
+import { createTaskRoutes } from './routes/task.routes';
+import { PrismaBoardRepository } from './repositories/board-prisma-repository';
+import { BoardController } from './controller/board-controller';
+import { BoardService } from './service/board-service';
+import { PrimaBoardUserRepository } from './repositories/board-user-prisma-repository';
+import { BoardUserService } from './service/board-user-service';
+import { BoardUserController } from './controller/board-user-controller';
+import { UserPrismaRepository } from './repositories/user-prisma-repository';
+import { UserService } from './service/user-service';
+import { UserController } from './controller/user-controller';
+import { TaskController } from './controller/task-controller';
+import { PrismaColumnRepository } from './repositories/column-prisma-repository';
+import { ColumnService } from './service/column-service';
+import { ColumnController } from './controller/column-controller';
+import { PrismaTaskRepository } from './repositories/task-prisma-repository';
+import { TaskService } from './service/task-service';
+import { AuthController } from './controller/auth-controller';
+import { AuthService } from './service/auth-service';
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+
+// Инициализация Socket.IO
+const io = new Server(httpServer, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+  transports: ['websocket', 'polling'],
+});
+
+const socketEmitter = registerSocketHandlers(io);
 
 // Безопасность и CORS
 app.use(helmet());
@@ -39,22 +67,50 @@ app.use((req, res, next) => {
 });
 
 
+//все контроллеры сервисы и ижэ с ними
+const prismaBoardRepo = new PrismaBoardRepository(prisma);
+const boardService = new BoardService(prismaBoardRepo);
+const boardController = new BoardController(boardService, socketEmitter);
+
+const prismaBoardUserRepo = new PrimaBoardUserRepository(prisma);
+const boardUserService = new BoardUserService(prismaBoardUserRepo);
+const boardUserController = new BoardUserController(boardUserService);
+
+const prismaUserRepo = new UserPrismaRepository(prisma);
+const userService = new UserService(prismaUserRepo);
+const userController = new UserController(userService);
+
+const authService = new AuthService(prismaUserRepo);
+const authController = new AuthController(authService);
+
+const prismaColummnRepo = new PrismaColumnRepository(prisma);
+const columnService = new ColumnService(prismaColummnRepo);
+const columnController = new ColumnController(columnService, socketEmitter);
+
+const prismaTaskRepo = new PrismaTaskRepository(prisma);
+const taskService = new TaskService(prismaTaskRepo);
+const taskController = new TaskController(taskService, socketEmitter);
+
 console.log('Registering routes...');
 
 //app.use('/api/tasks', createTaskRoutes());
 // Регистрация HTTP-роутов
-app.use('/api/boards', createBoardRoutes());
+app.use('/api/boards', createBoardRoutes(boardController));
 console.log('✓ Boards routes registered');
 
-app.use('/api/users', createUserRoutes());
+app.use('/api/users', createUserRoutes(userController));
 console.log('✓ User routes registered');
 
-app.use('/api/boardUsers', createBoardUserRoutes());
+app.use('/api/boardUsers', createBoardUserRoutes(boardUserController));
 console.log('✓ Board users routes registered');
-//app.use('/api/columns', createColumnRoutes());
-//app.use('/api/tasks', createTaskRoutes());
 
-app.use('/api/auth', createAuthRoutes());
+app.use('/api/columns', createColumnRoutes(columnController));
+console.log('✓ Column routes registered');
+
+app.use('/api/tasks', createTaskRoutes(taskController));
+console.log('✓ Task routes registered');
+
+app.use('/api/auth', createAuthRoutes(authController));
 console.log('✓ Authentification routes registered')
 
 // Health check endpoint
@@ -89,20 +145,6 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route not found' });
 });
-
-
-// Инициализация Socket.IO
-const io = new Server(httpServer, {
-  cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
-    methods: ['GET', 'POST'],
-    credentials: true,
-  },
-  transports: ['websocket', 'polling'],
-});
-
-// Регистрация обработчиков сокетов
-registerSocketHandlers(io);
 
 // Запуск сервера
 const PORT = parseInt(process.env.PORT || '3000', 10);

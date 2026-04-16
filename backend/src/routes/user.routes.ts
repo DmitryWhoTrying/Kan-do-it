@@ -4,13 +4,8 @@ import { UserService } from './../service/user-service';
 import { UserPrismaRepository } from './../repositories/user-prisma-repository';
 import { prisma } from '../lib/prisma';
 
-export function createUserRoutes(): Router{
+export function createUserRoutes(userController: UserController): Router{
     const router = Router();
-
-    // Dependency injection
-      const userRepository = new UserPrismaRepository(prisma);
-      const userService = new UserService(userRepository);
-      const userController = new UserController(userService);
     
       // REST endpoints
       router.get('/', userController.findUsers.bind(userController));

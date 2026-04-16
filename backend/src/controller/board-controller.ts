@@ -1,9 +1,13 @@
 import {Request, Response} from 'express';
 import {BoardService} from '../service/board-service'
 import { ClientToServerEvents, ServerToClientEvents } from '../../../shared/socket-events.types';
+import { SocketEmitter } from 'src/socket/socket-emitter';
 
 export class BoardController{
-    constructor(private boardService: BoardService){}
+    constructor(
+        private boardService: BoardService,
+        private socketEmitter: SocketEmitter
+    ){}
 
     async getAll(req: Request, res: Response){
         try{
@@ -74,24 +78,32 @@ export class BoardController{
     async updateBoard(req: Request, res: Response){
         const board = await this.boardService.updateBoard(req.body, Number(req.params.id));
         if (board)
+        {
             res.json({
-            success:true, 
-            data:board
-        });
+                success:true, 
+                data:board
+            });
+            this.socketEmitter.emitBoardUpdated(board.id, board)
+        }
         else
+        {
             res.status(500).json({
                 success:false,
                 error: "cannot update board with id: " + req.params.id
             });
+        }
     }
 
     async deleteBoard(req: Request, res: Response){
         const board = await this.boardService.deleteBoard(Number(req.params.id));
         if (board)
+        {
             res.status(200).json({
                 data: "successfully delete board with id: " + req.params.id, 
                 success:true
             });
+            this.socketEmitter.emitBoardDeleted(Number(req.params.id));
+        }
         else
             res.status(500).json({
                 success: false,

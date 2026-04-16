@@ -56,6 +56,11 @@ export class PrismaTaskRepository implements ITaskRepository{
         if (data.order){
             updateData.order = data.order;
         };
+        
+         if (columnId !== undefined) {
+            // Вариант через relation:
+            updateData.Column = { connect: { id: columnId } };
+        }
 
         const prismaTask = await this.prisma.task.update({
             where: {id: taskID},

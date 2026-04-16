@@ -1,13 +1,20 @@
 import { Request, Response } from "express";
 import {TaskService} from "../service/task-service";
+import { SocketEmitter } from "src/socket/socket-emitter";
 
 export class TaskController{
-    constructor(private taskService: TaskService){};
+    constructor(
+        private taskService: TaskService,
+        private socketEmmiter: SocketEmitter
+    ){};
 
     async create(req: Request, res: Response){
         const task = await this.taskService.create(req.body.task, req.body.columnId);
         if (task)
+        {
             res.status(200).json({success:true, data:task});
+            this.socketEmmiter.emitTaskCreated(req.body.boardId, req.body.columnId, task)
+        }
         else
             res.status(500).json({success:false, error: 
                 "Cannot create task with column id and data: " 
@@ -17,7 +24,10 @@ export class TaskController{
     async update(req: Request, res: Response){
         const task = await this.taskService.update(req.body.taskId, req.body.task, req.body.columnId);
         if (task)
+        {
             res.status(200).json({success:true, data:task});
+            this.socketEmmiter.emitTaskUpdated(req.body.boardId, req.body.columnId, task);
+        }
         else
             res.status(500).json({success:false, error: 
                 "Cannot update task with task id & column id & data" 
@@ -27,7 +37,10 @@ export class TaskController{
     async delete(req: Request, res: Response){
         const task = await this.taskService.delete(req.body.taskId);
         if (task)
+        {
             res.status(200).json({success:true, data: "Delete task with id" + req.body.taskId});
+            this.socketEmmiter.emitTaskDeleted(req.body.boardId, req.body.taskId, req.body.columnId);
+        }
         else
             res.status(500).json({success:false, error: "Cannot delete task with id " + req.body.taskId});
     }

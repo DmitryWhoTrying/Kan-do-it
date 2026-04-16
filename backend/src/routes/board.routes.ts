@@ -4,13 +4,8 @@ import { BoardService } from './../service/board-service';
 import { PrismaBoardRepository } from './../repositories/board-prisma-repository';
 import { prisma } from '../lib/prisma';
 
-export function createBoardRoutes(): Router {
+export function createBoardRoutes(boardController: BoardController): Router {
   const router = Router();
-  
-  // Dependency injection
-  const boardRepository = new PrismaBoardRepository(prisma);
-  const boardService = new BoardService(boardRepository);
-  const boardController = new BoardController(boardService);
 
   // REST endpoints
   router.get('/', boardController.getAll.bind(boardController));
