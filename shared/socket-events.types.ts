@@ -32,7 +32,7 @@ export interface ClientToServerEvents{
 export interface ServerToClientEvents{
     //изменения доски
     'board:state': (board: Board) => void;
-    'board:updated': (data:{boardId: number, board: Partial<Board>}) => void;
+    'board:updated': (board: Board) => void;
     'board:deleted': (boardId: number) => void;
 
     //изменения колонки
@@ -45,7 +45,7 @@ export interface ServerToClientEvents{
     'task:updated': (data: {columnId: number, task: Task}) => void;
     'task:deleted': (data: {taskId: number, columnId: number, boardId: number}) => void;
 
-    //ответы об успехе операции
+    //ответы об успехе операции (опционально можно ловить)
     'board:update:success': (board: Board) => void;
     'board:delete:success': ( boardId: number) => void;
 
