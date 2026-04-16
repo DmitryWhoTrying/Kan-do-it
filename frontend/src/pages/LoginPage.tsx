@@ -45,6 +45,8 @@ const LoginPage: React.FC = () => {
       // Сохраняем токен
       authService.saveToken(token);
       
+      console.log(user);
+
       // Обновляем Redux-стейт
       dispatch(setCurrentUser({
         boardId: -1, // Будет установлен при выборе доски

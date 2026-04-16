@@ -105,6 +105,16 @@ export class BoardService {
     return response.data.data || [];
   }
 
+  async getBoardUser(userId: number, boardId: number): Promise<BoardUser>{
+    const response = await apiClient.get<ApiResponse<BoardUser>>(
+      ``
+    );
+    if (!response.data.success || !response.data.data)
+      throw new Error(response.data.error || 'Failed to find board user');
+      
+    return response.data.data;
+  }
+
   /** Добавить пользователя на доску */
   async addUser(boardId: number, userId: number, permission: BoardUser['permission']): Promise<BoardUser> {
     const response = await apiClient.post<ApiResponse<BoardUser>>(this.boardUserEndpoint, {
@@ -221,6 +231,7 @@ export class BoardService {
 
     return response.data.data;
   }
+
 }
 
 // Экспорт singleton-инстанса

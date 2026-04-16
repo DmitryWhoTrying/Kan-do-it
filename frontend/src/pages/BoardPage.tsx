@@ -25,6 +25,11 @@ const BoardPage: React.FC = () => {
   
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
   
+  console.log('Current user', currentUser);
+  if (currentUser?.boardId === -1){
+    boardService.
+  }
+
   // Состояние для добавления колонки
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -63,6 +68,10 @@ const BoardPage: React.FC = () => {
         }));
       },
       onBoardUpdated: (board: Board) => {
+        console.log('Received', board);
+        if (!board){
+          console.error("Hadn't catch");
+        }
         //if (board?.id !== currentBoard?.id) {
         dispatch(updateBoardFields(board));
         //}
@@ -85,7 +94,7 @@ const BoardPage: React.FC = () => {
       },
 
       onTaskDeleted: (data:{taskId: number, columnId: number, boardId: number}) => {
-        dispatch(removeTask(data));
+        dispatch(removeTask(data))
       }
     };
 
@@ -183,10 +192,11 @@ const BoardPage: React.FC = () => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
     //посылаем обновку на сервер
+    console.log('trying to update boardTitle');
     try{boardService.update(currentBoard.id, {name: newName});}
     catch (err : any)
     {
-      alert("Не удалось изменить название колонки");
+      alert("Не удалось изменить название борды");
     }    
   };
 
@@ -209,7 +219,7 @@ const BoardPage: React.FC = () => {
       <header>
         <h1 className="header-logo">Kan-do-it</h1>
         <nav>
-          <span>{currentUser?.userName ?? "Гость"}</span>
+          <span>{currentUser?.userId ?? "guest"}</span>
           <button onClick={handleLogout}>Выйти</button>
         </nav>
       </header>
