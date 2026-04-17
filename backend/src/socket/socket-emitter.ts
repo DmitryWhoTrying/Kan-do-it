@@ -10,7 +10,9 @@ export class SocketEmitter {
     // === BOARD EVENTS ===
     
     emitBoardUpdated(boardId: number, board: Board) {
+        console.log("emitted message: board updated to", boardId);
         this.io.to(`board:${boardId}`).emit('board:updated', board);
+        this.io.to(`board:${boardId}`).emit('test:event', 'Hello from server!');
     }
 
     emitBoardDeleted(boardId: number) {
@@ -20,6 +22,7 @@ export class SocketEmitter {
     // === COLUMN EVENTS ===
 
     emitColumnCreated(boardId: number, column: Column) {
+        console.log("emitted message: column created to", boardId);
         this.io.to(`board:${boardId}`).emit('column:created', column);
     }
 

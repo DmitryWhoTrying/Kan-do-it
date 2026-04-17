@@ -57,6 +57,8 @@ export interface ServerToClientEvents{
     'task:update:success': (task: Task) => void;
     'task:delete:success': ( taskId: number ) => void;
 
+    'test:event': (message: string) => void;
+
     //ответ об ошибке выполнения операции
     'error': (message: string) => void;
 }

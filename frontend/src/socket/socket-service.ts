@@ -5,11 +5,13 @@ import { Board, Column, Task, User } from "../../../shared/types";
 import { useCallback } from "react";
 
 class SocketService {
-    private socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+    public socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
     private url: string;
 
     constructor(url: string = 'http://localhost:3000'){
         this.url = url;
+        console.log(`[SocketService] 🆔 Instance created: ${this.constructor.name}#${(this as any)._id || Math.random().toString(36).slice(2, 8)}`);
+        (this as any)._id = (this as any)._id || Math.random().toString(36).slice(2, 8);
     }
 
     connect(userId: number){
@@ -29,11 +31,17 @@ class SocketService {
 
         this.socket.on('disconnect', (reason) => {
             console.warn('Socket disconnected:', reason);
-            alert('Потеряно соединение c сокетом! Bo избежание рассинхронизации перезагрузите страницу');
+            //alert('Потеряно соединение c сокетом! Bo избежание рассинхронизации перезагрузите страницу');
         });
 
         this.socket.on('connect_error', (err) => {
             console.error('connection error:', err.message);
+        });
+
+        this.socket.onAny((event, arg) => {
+            //console.log(`📥 [SOCKET IN] ${event}`, arg);
+            console.log(`📥 [RAW] Event: "${event}", Args:`, arg);
+    console.log('  Expected: "board:updated", "column:created", etc.');
         });
     }
 
@@ -51,48 +59,23 @@ class SocketService {
     //Helper методы для отправки событий
     //board
     joinBoard(boardId: number){
+        if (!this.socket?.connected) {
+                console.warn('⚠️ Cannot join room: socket not connected');
+                return;
+        }
+
+        console.log(`🔑 Joining room: board:${boardId}`);
         this.socket?.emit('board:join', boardId);
     }
-
-    // updateBoard(boardId: number, board: Partial<Board>){
-    //     this.socket?.emit('board:update', {boardId, board});
-    // }
-
-    // deleteBoard(boardId: number){
-    //     this.socket?.emit('board:delete', boardId)
-    // }
-
-    // //column
-    // createColumn(boardId: number, column: Column){
-    //     this.socket?.emit('column:create',{boardId, column});
-    // }
-
-    // updateColumn(columnId: number, data: Partial<Column>, boardId: number){
-    //     this.socket?.emit('column:update', {columnId: columnId, data: data, boardId})
-    // }
-
-    // deleteColumn(columnId: number, boardId: number){
-    //     this.socket?.emit('column:delete', {columnId, boardId});
-    // }
-
-    // //task
-    // createTask(columnId: number, task: Task, boardId: number) {
-    //     this.socket?.emit('task:create', {task, columnId, boardId});
-    // }
-
-    // updateTask(taskId: number, columnId: number, boardId:number, task: Partial<Task>){
-    //     this.socket?.emit('task:update', {taskId, columnId, boardId, task})
-    // }
-
-    // deleteTask(taskId: number, columnId: number, boardId: number){
-    //     this.socket?.emit('task:delete', {taskId, columnId, boardId});
-    // }
-
 
     //Helper методы для подписки
     //board
     onBoardState(callback: (board: Board)=> void){
         this.socket?.on('board:state', callback);
+
+        return () => {
+            this.socket?.off('board:state', callback);
+        };
     }
 
     onBoardUpdated(callback: (board: Board) => void) {
@@ -105,6 +88,9 @@ class SocketService {
 
     onBoardDeleted(callback: (boardId:number) => void){
         this.socket?.on('board:deleted', callback);
+        return ()=>{
+            this.socket?.off('board:deleted', callback);
+        };
     }
 
     //column
@@ -117,15 +103,26 @@ class SocketService {
     
     onColumnUpdated(callback:(column: Column) => void){
         this.socket?.on('column:updated', callback);
+
+        return ()=>{
+            this.socket?.off('column:updated', callback);
+        };
     }
 
     onColumnDeleted(callback:(columnId: number) => void){
         this.socket?.on('column:deleted', callback);
+
+        return ()=> {
+            this.socket?.off('column:deleted', callback)
+        };
     }
 
     //task
     onTaskCreated(callback: (data:{columnId: number, task: Task}) => void){
         this.socket?.on('task:created', callback);
+        return () =>{
+            this.socket?.off('task:created', callback);
+        };
     }
 
     onTaskUpdated(callback: (data: {columnId: number, task: Task}) => void){
@@ -138,46 +135,19 @@ class SocketService {
 
     onTaskDeleted(callback: (data:{taskId: number, columnId: number, boardId: number})=> void){
         this.socket?.on('task:deleted', callback);
+
+        return () => {
+            this.socket?.off('task:deleted', callback);
+        };
     }
 
-    //Helper методы успешных операций
-    // onBoardUpdateSuccess(callback: (board: Board) => void){
-    //     this.socket?.on('board:update:success', callback);
-    // }
-
-    // onBoardDeleteSuccess(callback: (boardId: number) => void){
-    //     this.socket?.on('board:delete:success', callback);
-    // }
-
-    // //column
-    // onColumnCreatedSuccess(callback: (column: Column) => void): () => void {
-    //     this.socket?.on('column:create:success', callback);
-    //     return () => {
-    //         this.socket?.off('column:create:success', callback);
-    //     };
-    // }
-    
-    // onColumnUpdateSuccess(callback: (column: Column) => void){
-    //     this.socket?.on('column:update:success', callback);
-    // }
-    // onColumnDeleteSuccess(callback: (columnId: number)=> void){
-    //     this.socket?.on('column:delete:success', callback);
-    // }
-
-    // //task
-    // onTaskCreateSuccess(callback: (task: Task) => void){
-    //     this.socket?.on('task:create:success', callback);
-    // }
-    // oTaskUpdateSuccess(callback: (task: Task) => void){
-    //     this.socket?.on('task:update:success', callback);
-    // }
-    // onTaskDeleteSuccess(callback: (taskId: number) => void){
-    //     this.socket?.on('task:delete:success', callback);
-    // }
-
-      // Отписка от событий (важно для очистки!)
-  off(event: keyof ServerToClientEvents) {
-    this.socket?.off(event);
+      // Отписка от событий
+  off(event: any, callback?: (...args: any[]) => void): void {
+    if (callback) {
+      this.socket?.off(event, callback); // ✅ Отписываем конкретный колбэк
+    } else {
+      this.socket?.off(event); // ⚠️ Отписываем ВСЕ колбэки для события
+    }
   }
 }
 

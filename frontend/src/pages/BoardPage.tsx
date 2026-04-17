@@ -1,5 +1,5 @@
 // frontend/src/pages/BoardPage.tsx
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 
@@ -9,12 +9,13 @@ import {
   updateBoardFields, setCurrentUser, logout, updateColumn,
   updateTask
 } from '../store/boardSlice';
-import { boardService } from '../services/board-service';
+import { BoardService, boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
 import { Board, Column, Column as ColumnType, Task } from '../../../shared/types';
 import { authService } from '../services/auth-service';
+import { SocketTest } from '../components/socket-test';
 
 export const ItemTypes = { TASK: 'task', COLUMN: 'column' };
 
@@ -24,19 +25,95 @@ const BoardPage: React.FC = () => {
   const dispatch = useAppDispatch();
   
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
-  
-  console.log('Current user', currentUser);
-  if (currentUser?.boardId === -1 && currentBoard){
-    boardService.getBoardUser(currentUser.userId, currentBoard.id);
-  }
+
+
+   const hasSubscribedRef = useRef(false);
+  const lastBoardIdRef = useRef<string | null>(null);
 
   // Состояние для добавления колонки
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
 
-  // === Загрузка доски и подписка на сокеты ===
+  const handleTaskUpdated = useCallback((payload: { task: Task }) => {
+    dispatch(updateTaskAction({ 
+      taskId: payload.task.id, 
+      updates: payload.task 
+    }));
+  }, [dispatch]); // ✅ Только необходимые зависимости
+
+  const handleBoardUpdated = useCallback((board: Board) => {
+    console.log('📡 Received board update:', board);
+    dispatch(updateBoardFields(board));
+  }, [dispatch]);
+
+  const handleBoardDeleted = useCallback((boardId: number) => {
+    alert('Доска была удалена её владельцем!');
+    navigate('/'); // ✅ Редирект на список досок
+  }, [navigate]);
+
+  const handleColumnCreated = useCallback((column: Column) => {
+    console.log('🎯 CUSTOM HANDLER: column:created');
+    dispatch(addColumn(column));
+  }, [dispatch]);
+
+  const handleColumnUpdated = useCallback((column: Column) => {
+    console.log('🎯 CUSTOM HANDLER: column:updated');
+    dispatch(updateColumn(column));
+  }, [dispatch]);
+
+  const handleColumnDeleted = useCallback((columnId: number) => {
+    dispatch(removeColumn(columnId));
+  }, [dispatch]);
+
+  const handleTaskCreated = useCallback((data: { columnId: number; task: Task }) => {
+    dispatch(addTask(data));
+  }, [dispatch]);
+
+  const handleTaskDeleted = useCallback((data: { taskId: number; columnId: number; boardId: number }) => {
+    dispatch(removeTask(data));
+  }, [dispatch]);
+
+  // === Загрузка доски
+
   useEffect(() => {
-    if (!boardId || currentBoard?.id === Number(boardId)) return;
+  if (!boardId) return;
+
+  const loadBoard = async () => {
+    try {
+      dispatch(setLoading(true));
+      const board = await boardService.getById(Number(boardId));
+      dispatch(setBoard(board));
+      
+      const user = board.users?.find(u => u.userId === currentUser?.userId);
+      if (user) dispatch(setCurrentUser(user));
+      
+      socketService.joinBoard(Number(boardId));
+    } catch (err: any) {
+      dispatch(setError(err.message || 'Failed to load board'));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+  loadBoard();
+}, [boardId, dispatch]); 
+
+  // 
+  // и подписка на сокеты ===
+  useEffect(() => {
+    // ✅ Защита от повторного запуска
+    if (!boardId || hasSubscribedRef.current) {
+      console.log('⏭️ Skipping subscription:', { 
+        hasSubscribed: hasSubscribedRef.current,
+        boardId,
+        currentBoardId: currentBoard?.id 
+      });
+      return;
+    }
+
+    console.log('🔌 FIRST TIME: Setting up socket subscriptions for board:', boardId);
+    hasSubscribedRef.current = true;
+    lastBoardIdRef.current = boardId;
 
     const loadBoard = async () => {
       try {
@@ -59,63 +136,26 @@ const BoardPage: React.FC = () => {
 
     loadBoard();
 
-    // ЕДИНАЯ подписка на все сокет-события
-    const handlers = {
-      onTaskUpdated: (payload: { task: Task }) => {
-        dispatch(updateTaskAction({ 
-          taskId: payload.task.id, 
-          updates: payload.task 
-        }));
-      },
-      onBoardUpdated: (board: Board) => {
-        console.log('Received', board);
-        if (!board){
-          console.error("Hadn't catch");
-        }
-        //if (board?.id !== currentBoard?.id) {
-        dispatch(updateBoardFields(board));
-        //}
-      },
-      onBoardDeleted:(boardId: Number) => {
-        alert("Доска была удалена её владельцем!\nЛюбые изменения сохранены НЕ БУДУТ");
-      },
-      onColumnCreated: (column: Column) => {
-        dispatch(addColumn(column));
-      },
-      onColumnUpdated: (column: Column) => {
-        dispatch(updateColumn(column));
-      },
-      onColumnDeleted: (columnId: number) => {
-        dispatch(removeColumn(columnId));
-      },
+    const unsubscribes = [
+      socketService.onTaskUpdated(handleTaskUpdated),
+      socketService.onBoardUpdated(handleBoardUpdated),
+      socketService.onBoardDeleted(handleBoardDeleted),
+      socketService.onColumnCreated(handleColumnCreated),
+      socketService.onColumnUpdated(handleColumnUpdated),
+      socketService.onColumnDeleted(handleColumnDeleted),
+      socketService.onTaskCreated(handleTaskCreated),
+      socketService.onTaskDeleted(handleTaskDeleted),
+    ];
 
-      OnTaskCreated:(data:{columnId: number, task: Task}) =>{
-        dispatch(addTask(data));
-      },
-
-      onTaskDeleted: (data:{taskId: number, columnId: number, boardId: number}) => {
-        dispatch(removeTask(data))
-      }
-    };
-
-    socketService.onTaskUpdated(handlers.onTaskUpdated);
-    socketService.onBoardUpdated(handlers.onBoardUpdated);
-    socketService.onBoardDeleted(handlers.onBoardDeleted);
-    socketService.onColumnCreated(handlers.onColumnCreated);
-    socketService.onColumnUpdated(handlers.onColumnUpdated);
-    socketService.onColumnDeleted(handlers.onColumnDeleted);
-    socketService.onTaskCreated(handlers.OnTaskCreated);
-    socketService.onTaskDeleted(handlers.onTaskDeleted);
-
-    // Очистка: отписываемся от ВСЕХ событий
     return () => {
-      socketService.off('task:updated');
-      socketService.off('board:updated');
-      socketService.off('column:created');
-      socketService.off('column:updated');
-      socketService.off('column:deleted');
+      console.log('🧹 Cleanup called for board:', boardId);
+      // ✅ Сбрасываем флаг только если это та же доска
+      if (lastBoardIdRef.current === boardId) {
+        hasSubscribedRef.current = false;
+      }
+      unsubscribes.forEach(unsub => unsub?.());
     };
-  }, [boardId, dispatch, currentBoard?.id, currentUser?.userId]);
+  }, [boardId, dispatch /* убрали хендлеры из зависимостей */]);
 
   // === Обработчики CRUD (только HTTP, без socket.emit) ===
 
@@ -301,6 +341,7 @@ const BoardPage: React.FC = () => {
       </footer>
     </div>
   );
+  //{<SocketTest />};
 };
 
 export default BoardPage;

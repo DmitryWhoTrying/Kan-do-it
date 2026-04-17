@@ -158,7 +158,7 @@ export class PrismaBoardRepository implements IBoardRepository{
                     create: data.columns.map(col => ({
                         title: col.title,
                         order: col.order ?? 0,
-                        taks:{
+                        tasks:{
                             create: col.tasks.map(task=>({
                                 title: task.title,
                                 description: task.description,

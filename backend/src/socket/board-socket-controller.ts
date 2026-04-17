@@ -16,9 +16,10 @@ export class BoardSocketController{
             return socket.emit('error', 'Unauthorized');
         }
 
-        // Только транспорт: добавляем в комнату
+        console.log('Handling user socket join');
         socket.join(`board:${boardId}`);
-        console.log(`User ${userId} joined board ${boardId}`);
+        //console.log(`User ${userId} joined board ${boardId}`);
+        console.log(`✅ User ${userId} joined board:${boardId}`);
         
     };
 
