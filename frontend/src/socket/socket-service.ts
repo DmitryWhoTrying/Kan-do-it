@@ -54,39 +54,39 @@ class SocketService {
         this.socket?.emit('board:join', boardId);
     }
 
-    updateBoard(boardId: number, board: Partial<Board>){
-        this.socket?.emit('board:update', {boardId, board});
-    }
+    // updateBoard(boardId: number, board: Partial<Board>){
+    //     this.socket?.emit('board:update', {boardId, board});
+    // }
 
-    deleteBoard(boardId: number){
-        this.socket?.emit('board:delete', boardId)
-    }
+    // deleteBoard(boardId: number){
+    //     this.socket?.emit('board:delete', boardId)
+    // }
 
-    //column
-    createColumn(boardId: number, column: Column){
-        this.socket?.emit('column:create',{boardId, column});
-    }
+    // //column
+    // createColumn(boardId: number, column: Column){
+    //     this.socket?.emit('column:create',{boardId, column});
+    // }
 
-    updateColumn(columnId: number, data: Partial<Column>, boardId: number){
-        this.socket?.emit('column:update', {columnId: columnId, data: data, boardId})
-    }
+    // updateColumn(columnId: number, data: Partial<Column>, boardId: number){
+    //     this.socket?.emit('column:update', {columnId: columnId, data: data, boardId})
+    // }
 
-    deleteColumn(columnId: number, boardId: number){
-        this.socket?.emit('column:delete', {columnId, boardId});
-    }
+    // deleteColumn(columnId: number, boardId: number){
+    //     this.socket?.emit('column:delete', {columnId, boardId});
+    // }
 
-    //task
-    createTask(columnId: number, task: Task, boardId: number) {
-        this.socket?.emit('task:create', {task, columnId, boardId});
-    }
+    // //task
+    // createTask(columnId: number, task: Task, boardId: number) {
+    //     this.socket?.emit('task:create', {task, columnId, boardId});
+    // }
 
-    updateTask(taskId: number, columnId: number, boardId:number, task: Partial<Task>){
-        this.socket?.emit('task:update', {taskId, columnId, boardId, task})
-    }
+    // updateTask(taskId: number, columnId: number, boardId:number, task: Partial<Task>){
+    //     this.socket?.emit('task:update', {taskId, columnId, boardId, task})
+    // }
 
-    deleteTask(taskId: number, columnId: number, boardId: number){
-        this.socket?.emit('task:delete', {taskId, columnId, boardId});
-    }
+    // deleteTask(taskId: number, columnId: number, boardId: number){
+    //     this.socket?.emit('task:delete', {taskId, columnId, boardId});
+    // }
 
 
     //Helper методы для подписки
@@ -141,39 +141,39 @@ class SocketService {
     }
 
     //Helper методы успешных операций
-    onBoardUpdateSuccess(callback: (board: Board) => void){
-        this.socket?.on('board:update:success', callback);
-    }
+    // onBoardUpdateSuccess(callback: (board: Board) => void){
+    //     this.socket?.on('board:update:success', callback);
+    // }
 
-    onBoardDeleteSuccess(callback: (boardId: number) => void){
-        this.socket?.on('board:delete:success', callback);
-    }
+    // onBoardDeleteSuccess(callback: (boardId: number) => void){
+    //     this.socket?.on('board:delete:success', callback);
+    // }
 
-    //column
-    onColumnCreatedSuccess(callback: (column: Column) => void): () => void {
-        this.socket?.on('column:create:success', callback);
-        return () => {
-            this.socket?.off('column:create:success', callback);
-        };
-    }
+    // //column
+    // onColumnCreatedSuccess(callback: (column: Column) => void): () => void {
+    //     this.socket?.on('column:create:success', callback);
+    //     return () => {
+    //         this.socket?.off('column:create:success', callback);
+    //     };
+    // }
     
-    onColumnUpdateSuccess(callback: (column: Column) => void){
-        this.socket?.on('column:update:success', callback);
-    }
-    onColumnDeleteSuccess(callback: (columnId: number)=> void){
-        this.socket?.on('column:delete:success', callback);
-    }
+    // onColumnUpdateSuccess(callback: (column: Column) => void){
+    //     this.socket?.on('column:update:success', callback);
+    // }
+    // onColumnDeleteSuccess(callback: (columnId: number)=> void){
+    //     this.socket?.on('column:delete:success', callback);
+    // }
 
-    //task
-    onTaskCreateSuccess(callback: (task: Task) => void){
-        this.socket?.on('task:create:success', callback);
-    }
-    oTaskUpdateSuccess(callback: (task: Task) => void){
-        this.socket?.on('task:update:success', callback);
-    }
-    onTaskDeleteSuccess(callback: (taskId: number) => void){
-        this.socket?.on('task:delete:success', callback);
-    }
+    // //task
+    // onTaskCreateSuccess(callback: (task: Task) => void){
+    //     this.socket?.on('task:create:success', callback);
+    // }
+    // oTaskUpdateSuccess(callback: (task: Task) => void){
+    //     this.socket?.on('task:update:success', callback);
+    // }
+    // onTaskDeleteSuccess(callback: (taskId: number) => void){
+    //     this.socket?.on('task:delete:success', callback);
+    // }
 
       // Отписка от событий (важно для очистки!)
   off(event: keyof ServerToClientEvents) {

@@ -9,6 +9,7 @@ export class ColumnController{
     ){};
 
     async create(req: Request, res: Response){
+        console.log('handling column creating', req.body);
         const column = await this.columnService.create(req.body.column, req.body.boardId);
 
         if (column){
@@ -20,7 +21,7 @@ export class ColumnController{
     }
 
     async update(req: Request, res: Response){
-        const column = await this.columnService.update(req.body.columnId, req.body.column);
+        const column = await this.columnService.update(Number(req.params.columnId), req.body.column);
         if (column)
         {
             res.status(200).json({success:true, data:column});
@@ -31,14 +32,14 @@ export class ColumnController{
     }
 
     async delete(req: Request, res: Response){
-        const column = await this.columnService.delete(req.body.columnId);
+        const column = await this.columnService.delete(Number(req.params.columnId));
         if (column)
         {
             res.status(200).json({success:true, data:column});
-            this.socketEmmiter.emitColumnDeleted(req.body.boardId, req.body.columnId);
+            this.socketEmmiter.emitColumnDeleted(Number(req.params.boardId), Number(req.params.columnId));
         }
         else
-            res.status(500).json({success:false, error: "Cannot delete column with id: " + req.body.columnId})
+            res.status(500).json({success:false, error: "Cannot delete column with id: " + req.params.columnId})
     }
 
     async findAll(req: Request, res: Response){

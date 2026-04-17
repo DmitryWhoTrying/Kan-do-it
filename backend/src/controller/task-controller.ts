@@ -22,7 +22,7 @@ export class TaskController{
     }
 
     async update(req: Request, res: Response){
-        const task = await this.taskService.update(req.body.taskId, req.body.task, req.body.columnId);
+        const task = await this.taskService.update(Number(req.params.taskId), req.body.task, req.body.columnId);
         if (task)
         {
             res.status(200).json({success:true, data:task});
@@ -31,15 +31,15 @@ export class TaskController{
         else
             res.status(500).json({success:false, error: 
                 "Cannot update task with task id & column id & data" 
-                + req.body.taskId + req.body.columnI + req.body.task});
+                + Number(req.params.taskId) + req.body.columnI + req.body.task});
     }
 
     async delete(req: Request, res: Response){
-        const task = await this.taskService.delete(req.body.taskId);
+        const task = await this.taskService.delete(Number(req.params.taskId));
         if (task)
         {
-            res.status(200).json({success:true, data: "Delete task with id" + req.body.taskId});
-            this.socketEmmiter.emitTaskDeleted(req.body.boardId, req.body.taskId, req.body.columnId);
+            res.status(200).json({success:true, data: "Delete task with id" + Number(req.params.taskId)});
+            this.socketEmmiter.emitTaskDeleted(Number(req.params.boardId), Number(req.params.taskId), Number(req.params.columnId));
         }
         else
             res.status(500).json({success:false, error: "Cannot delete task with id " + req.body.taskId});
@@ -54,18 +54,18 @@ export class TaskController{
     }
 
     async find(req: Request, res: Response){
-        const task = await this.taskService.find(req.body.taskId);
+        const task = await this.taskService.find(Number(req.params.taskId));
         if (task)
             res.status(200).json({success:true, data:task});
         else
-            res.status(500).json({success:false, error: "Cannot find task with id: " + req.body.taskId});
+            res.status(500).json({success:false, error: "Cannot find task with id: " + req.params.taskId});
     }
 
     async findByColumn(req: Request, res: Response){
-        const task = await this.taskService.findByColumn(req.body.columnId);
+        const task = await this.taskService.findByColumn(Number(req.params.columnId));
         if (task)
             res.status(200).json({success:true, data:task});
         else
-            res.status(500).json({success:false, error: "Cannot find tasks with columnId " + req.body.columnId});
+            res.status(500).json({success:false, error: "Cannot find tasks with columnId " + req.params.columnId});
     }
 }

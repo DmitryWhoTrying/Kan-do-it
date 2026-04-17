@@ -106,13 +106,15 @@ export class BoardService {
   }
 
   async getBoardUser(userId: number, boardId: number): Promise<BoardUser>{
-    const response = await apiClient.get<ApiResponse<BoardUser>>(
-      ``
+    const response = await apiClient.get<ApiResponse<BoardUser[]>>(
+      `${this.boardUserEndpoint}/user/${userId}`,
     );
     if (!response.data.success || !response.data.data)
       throw new Error(response.data.error || 'Failed to find board user');
+
+    const boardUser = response.data.data.filter((usr) => {return usr.boardId === boardId;})[0];
       
-    return response.data.data;
+    return boardUser;
   }
 
   /** Добавить пользователя на доску */
@@ -155,7 +157,8 @@ export class BoardService {
 
 
   //колоночность
-  async addColumn(boardId: number, column: Omit<Column, 'id' | 'tasks'>): Promise<Column> {
+  async addColumn(boardId: number, column: Omit<Column, 'id'>): Promise<Column> {
+    console.log('trying to create column');
     const response = await apiClient.post<ApiResponse<Column>>(
     `${this.columnEndpoint}/`,
     {column, boardId}
@@ -222,7 +225,7 @@ export class BoardService {
 
   async deleteTask(boardId: number, columnId: number, taskId: number):Promise<Boolean>{
     const response = await apiClient.delete<ApiResponse<Boolean>>(
-      `${this.taskEndpoint}/column/:columnId/board/:boardId`
+      `${this.taskEndpoint}/column/${columnId}/board/${boardId}`
     );
 
     if (!response.data.success || !response.data.data){

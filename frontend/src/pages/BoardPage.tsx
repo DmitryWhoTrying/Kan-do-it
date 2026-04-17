@@ -26,8 +26,8 @@ const BoardPage: React.FC = () => {
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
   
   console.log('Current user', currentUser);
-  if (currentUser?.boardId === -1){
-    boardService.
+  if (currentUser?.boardId === -1 && currentBoard){
+    boardService.getBoardUser(currentUser.userId, currentBoard.id);
   }
 
   // Состояние для добавления колонки
@@ -131,6 +131,7 @@ const BoardPage: React.FC = () => {
       const newColumn = await boardService.addColumn(currentBoard.id, {
         title: newColumnTitle.trim(),
         order: maxOrder + 1,
+        tasks: []
       });
 
       dispatch(addColumn(newColumn));
@@ -219,7 +220,7 @@ const BoardPage: React.FC = () => {
       <header>
         <h1 className="header-logo">Kan-do-it</h1>
         <nav>
-          <span>{currentUser?.userId ?? "guest"}</span>
+          <span>{currentUser?.userName ?? "guest"}</span>
           <button onClick={handleLogout}>Выйти</button>
         </nav>
       </header>

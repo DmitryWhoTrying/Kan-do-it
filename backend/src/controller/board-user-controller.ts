@@ -11,19 +11,19 @@ export class BoardUserController{
     }
 
     async findByBoardId(req: Request, res: Response){
-        const boardUsers = await this.boardUserService.findByBoard(req.body.boardId);
+        const boardUsers = await this.boardUserService.findByBoard(Number(req.params.boardId));
         if (boardUsers)
             res.status(200).json({success:true, data: boardUsers});
         else
-            res.status(404).json({success: false, error: "Cannot find Board users with id: " + req.body.boardId});
+            res.status(404).json({success: false, error: "Cannot find Board users with id: " + Number(req.params.boardId)});
     }
 
     async findByUserId(req: Request, res: Response){
-        const boardUsers = await this.boardUserService.findByUser(req.body.userId);
+        const boardUsers = await this.boardUserService.findByUser(Number(req.params.userId));
         if (boardUsers)
             res.status(200).json({success: true, data: boardUsers});
         else
-            res.status(404).json({success: false, error: "Cannot find Board users with id: " + req.body.userId});
+            res.status(404).json({success: false, error: "Cannot find Board users with id: " + Number(req.params.userId)});
     }
 
     async create(req: Request, res: Response){
@@ -36,19 +36,19 @@ export class BoardUserController{
     }
 
     async update(req: Request, res: Response){
-        const boardUser = await this.boardUserService.update(req.body.userId, req.body.boardId, req.body.boardUser);
+        const boardUser = await this.boardUserService.update(Number(req.params.userId), Number(req.body.boardId), {permission: req.body.permission});
         if (boardUser)
             res.status(200).json({success:true, data:boardUser});
         else
-            res.status(500).json({success:false, error: 'Cannot update user with id & data:' + req.body.userId + req.body.boardId + req.body.boardUser});
+            res.status(500).json({success:false, error: 'Cannot update user with id & data:'});
     }
 
     async delete(req: Request, res: Response){
-        const boardUser = await this.boardUserService.delete(req.body.userId, req.body.boardId);
+        const boardUser = await this.boardUserService.delete(Number(req.params.userId), Number(req.params.boardId));
 
         if (boardUser)
-            res.status(200).json({success:true, data: 'Board user deleted, id:' + req.body.userId + ' ' + req.body.boardId});
+            res.status(200).json({success:true, data: 'Board user deleted, id:' + Number(req.params.userId) + ' ' + Number(req.params.boardId)});
         else (boardUser)
-            res.status(500).json({success:false, error: 'Cannot delete user with id: ' + req.body.userid +  ' ' + req.body.boardId});
+            res.status(500).json({success:false, error: 'Cannot delete user with id: ' + Number(req.params.userId) +  ' ' + Number(req.params.boardId)});
     }
 }
