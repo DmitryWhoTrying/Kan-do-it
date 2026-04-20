@@ -16,6 +16,7 @@ import DraggableColumn from '../components/DraggableColumn';
 import { Board, Column, Column as ColumnType, Task } from '../../../shared/types';
 import { authService } from '../services/auth-service';
 import { SocketTest } from '../components/socket-test';
+import { current } from '@reduxjs/toolkit';
 
 export const ItemTypes = { TASK: 'task', COLUMN: 'column' };
 
@@ -23,6 +24,10 @@ const BoardPage: React.FC = () => {
   const { boardId } = useParams<{ boardId: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  //локалстейты пиздец надо
+  const [isAddingColumn, setIsAddingColumn] = useState(false);
+  const [newColumnTitle, setNewColumnTitle] = useState('');
   
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
 
@@ -30,9 +35,6 @@ const BoardPage: React.FC = () => {
    const hasSubscribedRef = useRef(false);
   const lastBoardIdRef = useRef<string | null>(null);
 
-  // Состояние для добавления колонки
-  const [isAddingColumn, setIsAddingColumn] = useState(false);
-  const [newColumnTitle, setNewColumnTitle] = useState('');
 
   const handleTaskUpdated = useCallback((payload: { task: Task }) => {
     dispatch(updateTaskAction({ 
@@ -160,6 +162,8 @@ const BoardPage: React.FC = () => {
   // === Обработчики CRUD (только HTTP, без socket.emit) ===
 
   const handleAddColumn = useCallback(async () => {
+    console.log('trying to add column');
+
     if (!currentBoard || !newColumnTitle.trim()) return;
 
     try {
@@ -176,7 +180,6 @@ const BoardPage: React.FC = () => {
 
       dispatch(addColumn(newColumn));
       setNewColumnTitle('');
-      // НЕ вызываем socketService.createColumn() — бэкенд сам сделает emit
       
     } catch (err: any) {
       dispatch(setError(err.message || 'Failed to create column'));
@@ -185,7 +188,7 @@ const BoardPage: React.FC = () => {
     }
   }, [currentBoard, newColumnTitle, dispatch]);
 
-  const moveTask = useCallback((taskId: number, sourceColumnId: number, targetColumnId: number) => {
+  const moveTask = useCallback(async (taskId: number, sourceColumnId: number, targetColumnId: number) => {
     if (!currentBoard) return;
 
     const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
@@ -200,8 +203,24 @@ const BoardPage: React.FC = () => {
     dispatch(removeTask({ columnId: sourceColumnId, taskId: task.id }));
     dispatch(addTask({ columnId: targetColumnId, task: taskToMove }));
 
-    // Только HTTP — бэкенд уведомит остальных
-    boardService.updateTask(currentBoard.id, targetColumnId, taskId, { order: taskToMove.order });
+    const updatedColumns = currentBoard.columns.map(col => {
+    if (col.id === sourceColumnId) {
+      // Удаляем задачу из исходной колонки
+      return {
+        ...col,
+        tasks: col.tasks.filter(t => t.id !== taskId).map((t, idx) => ({ ...t, order: idx }))
+      };
+    } else if (col.id === targetColumnId) {
+        // Добавляем задачу в целевую колонку
+        return {
+          ...col,
+          tasks: [...col.tasks, taskToMove].map((t, idx) => ({ ...t, order: idx }))
+        };
+      }
+      return col;
+    });
+
+    boardService.update(currentBoard.id, { columns: updatedColumns });
 
   }, [currentBoard, dispatch]);
 
@@ -229,6 +248,22 @@ const BoardPage: React.FC = () => {
     }
   }, [dispatch, currentBoard]);
 
+  const handleAddTask = useCallback(async (columnId: number, taskData: Omit<Task, 'id'>) => {
+    if (!currentBoard) return;
+
+    try {
+      // Создаём задачу через HTTP
+      const newTask = await boardService.createTask(currentBoard.id, columnId, taskData);
+      
+      // Добавляем в Redux
+      dispatch(addTask({ columnId, task: newTask }));
+    } 
+    catch (err: any) {
+      console.error('Failed to create task:', err);
+      dispatch(setError(err.message || 'Failed to create task'));
+    }
+  }, [currentBoard, dispatch]);
+
   const handleBoardTitleChange = (newName: string) => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
@@ -240,6 +275,26 @@ const BoardPage: React.FC = () => {
       alert("Не удалось изменить название борды");
     }    
   };
+
+  const handleDeleteColumn = useCallback(async (columnId: number) => {
+    if (!currentBoard) return;
+
+    try {
+      // Создаём задачу через HTTP
+      const deleteColumn = boardService.deleteColumn(currentBoard.id, columnId);
+      
+      if (!deleteColumn)
+        console.log('Колонка не была удалена!');
+
+      // Добавляем в Redux
+      dispatch(removeColumn(columnId));
+    } 
+    catch (err: any) {
+      console.error('Failed to delete column:', err);
+      dispatch(setError(err.message || 'Failed to delete column'));
+    }
+  }, [currentBoard, dispatch]);
+
 
   const handleLogout = () => {
     if (!window.confirm('Вы уверены, что хотите выйти?')) return;
@@ -291,10 +346,12 @@ const BoardPage: React.FC = () => {
                   onMoveTask={moveTask}
                   onMoveColumn={moveColumn}
                   onUpdateTask={handleUpdateTask}
+                  onAddTask={handleAddTask}
+                  onDeleteColumn={handleDeleteColumn}
                 />
               ))}
             
-            {/* ✅ Кнопка добавления колонки */}
+            {/*Кнопка добавления колонки */}
             <div className="add-column">
               {isAddingColumn ? (
                 <div className="add-column-form">

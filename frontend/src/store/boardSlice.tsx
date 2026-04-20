@@ -1,12 +1,19 @@
 // frontend/src/store/slices/boardSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Board, BoardUser, Column, Task } from '../../../shared/types';
+import { act } from 'react';
 
 interface BoardState {
   currentBoard: Board | null;      
   currentUser: BoardUser | null; 
-  authToken: string | null;   
-  isLoading: boolean;              
+  authToken: string | null;  
+
+  isLoading: boolean;       
+  isAddingTask: boolean;
+  isCreating: boolean;
+   
+  newTaskTitle: string;
+
   error: string | null;            
 }
 
@@ -14,8 +21,13 @@ const initialState: BoardState = {
   currentBoard: null,
   currentUser: null,
   authToken: null,
+
   isLoading: false,
   error: null,
+  isAddingTask: false,
+  isCreating: false,
+
+  newTaskTitle: ''
 };
 
 const boardSlice = createSlice({
@@ -43,7 +55,6 @@ const boardSlice = createSlice({
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
     },
-
 
     //token
     setAuthToken: (state, action: PayloadAction<string | null>) => {
@@ -125,6 +136,10 @@ const boardSlice = createSlice({
       const column = state.currentBoard.columns.find(
         col => col.id === action.payload.columnId
       );
+
+      //во избежание дублирования
+      if (column?.tasks.find( (tsk) => {return tsk.id === action.payload.task.id;}))
+        return;
       
       if (column) {
         column.tasks.push(action.payload.task);
@@ -261,6 +276,7 @@ export const {
   updateTask,
   moveTask,
   removeTask,
+
   
   // Синхронизация
   syncBoard,

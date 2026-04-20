@@ -198,6 +198,7 @@ export class BoardService {
 
   //тасочки
   async createTask(boardId: number, columnId: number, task: Omit<Task,'id' | 'createdAt'>):Promise<Task>{
+    console.log("Trying to create task", task);
     const response = await apiClient.post<ApiResponse<Task>>(
       `${this.taskEndpoint}/`,
       {columnId, boardId, task}
@@ -234,6 +235,8 @@ export class BoardService {
 
     return response.data.data;
   }
+
+  
 
 }
 

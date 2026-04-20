@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Column as ColumnType, Task as TaskType } from '../../../shared/types';
@@ -15,6 +15,8 @@ interface DraggableColumnProps {
   onMoveTask: (taskId: number, sourceColumnId: number, targetColumnId: number) => void;
   onMoveColumn: (dragIndex: number, hoverIndex: number) => void;
   onUpdateTask: (columnId: number, updatedTask: TaskType) => void;
+  onAddTask?: (columnId: number, task: Omit<TaskType, 'id'>) => void; // ✅ Новый проп
+  onDeleteColumn?: (columnId: number) => void;
 }
 
 interface DragItem {
@@ -32,10 +34,16 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   boardId,
   onMoveTask,
   onMoveColumn,
-  onUpdateTask
+  onUpdateTask,
+  onAddTask,
+  onDeleteColumn
 }) => {
   const columnRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
+
+  const [isAddingTask, setIsAddingTask] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
 
   // Настройка drag для колонки
   const [{ isDragging }, drag, preview] = useDrag({
@@ -109,6 +117,48 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
     }));
   };
 
+  const handleAddTask = useCallback(async () => {
+    if (!newTaskTitle.trim() || !onAddTask) return;
+
+    try {
+      setIsCreating(true);
+      
+      // Определяем порядок (последняя задача + 1)
+      const maxOrder = column.tasks.reduce(
+        (max, task) => Math.max(max, task.order || 0),
+        -1
+      );
+
+      // Создаём задачу
+      onAddTask(column.id, {
+        startDate: '12 20 2004',
+        title: newTaskTitle.trim(),
+        description: '',
+        order: maxOrder + 1,
+      });
+
+      // Очищаем форму
+      setNewTaskTitle('');
+      setIsAddingTask(false);
+    } catch (error) {
+      console.error('Failed to create task:', error);
+    } finally {
+      setIsCreating(false);
+    }
+  }, [newTaskTitle, column.id, column.tasks, boardId, onAddTask]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleAddTask();
+    } else if (e.key === 'Escape') {
+      setNewTaskTitle('');
+      setIsAddingTask(false);
+    }
+  };
+
+  const opacity = isDragging ? 0.4 : 1;
+
   // Объединяем ref для drag и drop
   drag(drop(columnRef));
 
@@ -128,6 +178,17 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
           {column.title}
         </h2>
         <span className="drag-handle">⋮⋮</span>
+        <span className="task-count">{column.tasks.length}</span>
+        {/* Кнопка удаления колонки*/}
+        {onDeleteColumn && (
+          <button 
+            className="btn-delete-column"
+            onClick={() => onDeleteColumn(column.id)}
+            title="Удалить колонку"
+          >
+            ✕
+          </button>
+        )}
       </div>
       
       <div className="column-tasks">
@@ -140,6 +201,50 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
               onUpdateTask={onUpdateTask}
             />
         ))}
+
+         {/* Форма добавления задачи */}
+        {isAddingTask ? (
+          <div className="add-task-form">
+            <textarea
+              placeholder="Название задачи"
+              value={newTaskTitle}
+              onChange={(e) => setNewTaskTitle(e.target.value)}
+              onKeyDown={handleKeyDown}
+              autoFocus
+              className="task-input"
+              rows={3}
+              disabled={isCreating}
+            />
+            <div className="add-task-actions">
+              <button 
+                onClick={handleAddTask}
+                disabled={!newTaskTitle.trim() || isCreating}
+                className="btn-add-task"
+              >
+                {isCreating ? 'Создание...' : 'Добавить'}
+              </button>
+              <button 
+                onClick={() => {
+                  setNewTaskTitle('');
+                  setIsAddingTask(false);
+                }}
+                className="btn-cancel"
+                disabled={isCreating}
+              >
+                Отмена
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* Кнопка показа формы */
+          <button 
+            onClick={() => setIsAddingTask(true)}
+            className="btn-add-task-toggle"
+            disabled={isCreating}
+          >
+            + Добавить задачу
+          </button>
+        )}
       </div>
     </div>
   );
