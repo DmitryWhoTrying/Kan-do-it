@@ -95,6 +95,10 @@ const boardSlice = createSlice({
     // === Колонки ===
     addColumn: (state, action: PayloadAction<Column>) => {
       if (state.currentBoard) {
+
+        if (state.currentBoard.columns.find((col)=> {return col.id === action.payload.id}))
+          return;
+
         state.currentBoard.columns.push(action.payload);
         // Сортируем по order после добавления
         state.currentBoard.columns.sort((a, b) => (a.order ?? a.id) - 
