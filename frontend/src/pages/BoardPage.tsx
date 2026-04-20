@@ -316,7 +316,7 @@ const BoardPage: React.FC = () => {
         <h1 className="header-logo">Kan-do-it</h1>
         <nav>
           <span>{currentUser?.userName ?? "guest"}</span>
-          <button onClick={handleLogout}>Выйти</button>
+          <button name='log-out-btn' onClick={handleLogout}>Выйти</button>
         </nav>
       </header>
 
