@@ -264,6 +264,7 @@ const BoardPage: React.FC = () => {
     }
   }, [currentBoard, dispatch]);
 
+
   const handleBoardTitleChange = (newName: string) => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
