@@ -5,7 +5,7 @@ import { Column as ColumnType, Task as TaskType } from '../../../shared/types';
 import Task from './Task';
 import { ItemTypes } from '../types/dnd-types';
 import {  updateColumn  } from '../store/boardSlice';
-import { useAppDispatch } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 
 
 interface DraggableColumnProps {
@@ -41,6 +41,8 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   const columnRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
 
+  const currectUser = useAppSelector(state => state.board.currentUser);
+
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -53,6 +55,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
       id: column.id,
       type: ItemTypes.COLUMN 
     },
+    canDrag: currectUser?.permission !== 'view-only',
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -160,7 +163,8 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   const opacity = isDragging ? 0.4 : 1;
 
   // Объединяем ref для drag и drop
-  drag(drop(columnRef));
+  if (!(currectUser?.permission === 'view-only'))
+    drag(drop(columnRef));
 
   return (
     <div
@@ -180,7 +184,10 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
         <span className="drag-handle">⋮⋮</span>
         <span className="task-count">{column.tasks.length}</span>
         {/* Кнопка удаления колонки*/}
-        {onDeleteColumn && (
+        {(currectUser?.permission === 'owner' || 
+          currectUser?.permission === 'edit') 
+          && onDeleteColumn 
+          && (
           <button 
             className="btn-delete-column"
             onClick={() => onDeleteColumn(column.id)}
@@ -203,7 +210,9 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
         ))}
 
          {/* Форма добавления задачи */}
-        {isAddingTask ? (
+        {(currectUser?.permission === 'owner' ||
+           currectUser?.permission ==='edit') ?
+          (isAddingTask ? (
           <div className="add-task-form">
             <textarea
               placeholder="Название задачи"
@@ -244,7 +253,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
           >
             + Добавить задачу
           </button>
-        )}
+        )) : <></>}
       </div>
     </div>
   );

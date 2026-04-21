@@ -278,7 +278,13 @@ const BoardPage: React.FC = () => {
 
   const handleDeleteColumn = useCallback(async (columnId: number) => {
     if (!currentBoard) return;
+    if (!(currentUser?.permission === 'owner' || currentUser?.permission === 'edit')){
+        alert('Не достаточно прав для удаления колонки!');
+        return;
+    }
 
+    if (!window.confirm('Вы уверены что хотите удалить колонку?\nОтменить это действие будет невозможно'))
+      return;
     try {
       // Создаём задачу через HTTP
       const deleteColumn = boardService.deleteColumn(currentBoard.id, columnId);
@@ -324,7 +330,9 @@ const BoardPage: React.FC = () => {
         <Sidebar />
         
         <div className="work-space">
-          <h2 
+
+          {currentUser?.permission === 'owner' || currentUser?.permission === 'edit' 
+            ? <h2 
             className="table-title-h2"
             contentEditable
             suppressContentEditableWarning
@@ -332,6 +340,12 @@ const BoardPage: React.FC = () => {
           >
             {currentBoard.name}
           </h2>
+            : <h2 
+            className="table-title-h2"
+          >
+            {currentBoard.name}
+          </h2>
+          }
 
           <div className="columns">
             {currentBoard.columns
@@ -352,7 +366,10 @@ const BoardPage: React.FC = () => {
               ))}
             
             {/*Кнопка добавления колонки */}
-            <div className="add-column">
+            {
+              currentUser?.permission === 'owner' || currentUser?.permission === 'edit' 
+              ? 
+              <div className="add-column">
               {isAddingColumn ? (
                 <div className="add-column-form">
                   <input
@@ -389,6 +406,8 @@ const BoardPage: React.FC = () => {
                 </button>
               )}
             </div>
+              : <></>
+            }
           </div>
         </div>
       </div>

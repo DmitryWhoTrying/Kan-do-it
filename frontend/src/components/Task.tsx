@@ -3,7 +3,7 @@ import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { Task as TaskType } from '../../../shared/types';
 import { ItemTypes } from '../types/dnd-types';
-import { useAppDispatch } from '../store/hooks';
+import { useAppDispatch, useAppSelector } from '../store/hooks';
 //import { setTask } from '../store/boardSlice';
 
 interface TaskProps {
@@ -23,8 +23,11 @@ const Task: React.FC<TaskProps> = ({
 }) => {
   const dispatch = useAppDispatch();
 
+  const currentUser = useAppSelector(state => state.board.currentUser);
+
   const [{ isDragging }, drag, preview] = useDrag(() => ({
     type: ItemTypes.TASK,
+    canDrag: currentUser?.permission !== 'view-only',
     item: { 
       id: task.id, 
       columnId: columnId,
@@ -73,7 +76,10 @@ const Task: React.FC<TaskProps> = ({
           {task.tag}
         </h3>
       )}
-      <div className="task-content">
+      {
+        (currentUser?.permission === 'owner' || currentUser?.permission === 'edit')
+      ?
+        <div className="task-content">
         <h3 
           className="task-name"
           contentEditable
@@ -102,6 +108,28 @@ const Task: React.FC<TaskProps> = ({
           )}
         </div>
       </div>
+      : 
+        <div className="task-content">
+        <h3 className="task-name">
+          {task.title}
+        </h3>
+        <p >
+          {task.description}
+        </p>
+        <div className="task-time-div">
+          {task.startDate && (
+            <time className="task-start-date" dateTime={task.startDate}>
+              от {new Date(task.startDate).toLocaleDateString('ru-RU')}
+            </time>
+          )}
+          {task.endDate && (
+            <time className="task-end-date" dateTime={task.endDate}>
+              до {new Date(task.endDate).toLocaleDateString('ru-RU')}
+            </time>
+          )}
+        </div>
+      </div>
+      }      
     </div>
   );
 };
