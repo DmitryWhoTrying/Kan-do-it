@@ -133,6 +133,7 @@ const Task: React.FC<TaskProps> = ({
             </time>
           )}
         </div>
+        <div style={{display: 'flex', justifyContent: 'space-between'}}>
         {/* Кнопка удаления */}
         {!(currentUser?.permission === 'view-only' || currentUser?.permission ==='drag-n-drop') && onDeleteTask && (
           <button
@@ -144,14 +145,12 @@ const Task: React.FC<TaskProps> = ({
             ✕
           </button>
         )}
-      </div>
-        
-      {/* Метаданные задачи */}
+        {/* Метаданные задачи */}
       <div className="task-meta">
         {/* Дата окончания */}
         {task.endDate && (
           <span className={`task-due-date ${isOverdue ? 'task-due-date--overdue' : ''}`}>
-            📅 {formatDate(task.endDate)}
+            📅 Дедлайн: {formatDate(task.endDate)}
           </span>
         )}
 
@@ -159,6 +158,8 @@ const Task: React.FC<TaskProps> = ({
         {task.tag && (
           <span className="task-tag">{task.tag}</span>
         )}
+        </div>
+      </div>
       </div>
     </div>
   );
