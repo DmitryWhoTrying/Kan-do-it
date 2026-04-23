@@ -79,7 +79,8 @@ const BoardPage: React.FC = () => {
   // === Загрузка доски
 
   useEffect(() => {
-  if (!boardId) return;
+  if (!boardId || hasSubscribedRef.current) return;
+  hasSubscribedRef.current = true;
 
   const loadBoard = async () => {
     try {
@@ -99,62 +100,8 @@ const BoardPage: React.FC = () => {
   };
 
   loadBoard();
-}, [boardId, dispatch]); 
 
-
-//загрузка boardusers
-useEffect(() => {
-  const loadBoardUsers = async () => {
-    if (!boardId) return;
-    try {
-      const users = await boardService.getByBoardId(Number(boardId));
-      setBoardUsers(users);
-    } catch (err) {
-      console.error('Failed to load board users:', err);
-    }
-  };
-  loadBoardUsers();
-}, [boardId]);
-
-  // 
-  // и подписка на сокеты ===
-  useEffect(() => {
-    // ✅ Защита от повторного запуска
-    if (!boardId || hasSubscribedRef.current) {
-      console.log('⏭️ Skipping subscription:', { 
-        hasSubscribed: hasSubscribedRef.current,
-        boardId,
-        currentBoardId: currentBoard?.id 
-      });
-      return;
-    }
-
-    console.log('🔌 FIRST TIME: Setting up socket subscriptions for board:', boardId);
-    hasSubscribedRef.current = true;
-    lastBoardIdRef.current = boardId;
-
-    const loadBoard = async () => {
-      try {
-        dispatch(setLoading(true));
-        const board = await boardService.getById(Number(boardId));
-        dispatch(setBoard(board));
-        
-        const user = board.users?.find(u => u.userId === currentUser?.userId);
-        if (user && user.userId !== currentUser?.userId) {
-          dispatch(setCurrentUser(user));
-        }
-        
-        socketService.joinBoard(Number(boardId));
-      } catch (err: any) {
-        dispatch(setError(err.message || 'Failed to load board'));
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    loadBoard();
-
-    const unsubscribes = [
+  const unsubscribes = [
       socketService.onTaskUpdated(handleTaskUpdated),
       socketService.onBoardUpdated(handleBoardUpdated),
       socketService.onBoardDeleted(handleBoardDeleted),
@@ -173,8 +120,24 @@ useEffect(() => {
       }
       unsubscribes.forEach(unsub => unsub?.());
     };
-  }, [boardId, dispatch /* убрали хендлеры из зависимостей */]);
+}, [boardId, dispatch, currentUser?.userId]); 
 
+
+//загрузка boardusers
+useEffect(() => {
+  const loadBoardUsers = async () => {
+    if (!boardId) return;
+    try {
+      const users = await boardService.getByBoardId(Number(boardId));
+      setBoardUsers(users);
+    } catch (err) {
+      console.error('Failed to load board users:', err);
+    }
+  };
+  loadBoardUsers();
+}, [boardId]);
+
+  
   // === Обработчики CRUD (только HTTP, без socket.emit) ===
 
   const handleAddColumn = useCallback(async () => {
@@ -205,40 +168,57 @@ useEffect(() => {
   }, [currentBoard, newColumnTitle, dispatch]);
 
   const moveTask = useCallback(async (taskId: number, sourceColumnId: number, targetColumnId: number) => {
-    if (!currentBoard) return;
+  if (!currentBoard) return;
 
-    const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
-    const task = sourceColumn?.tasks.find(tsk => tsk.id === taskId);
-    if (!task) return;
+  const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
+  const task = sourceColumn?.tasks.find(tsk => tsk.id === taskId);
+  if (!task) {
+    console.error('Task not found:', { taskId, sourceColumnId });
+    return;
+  }
 
-    const taskToMove = { ...task };
-    const targetColumn = currentBoard.columns.find(col => col.id === targetColumnId);
-    taskToMove.order = targetColumn ? targetColumn.tasks.length : 0;
+  // ✅ ГЛАВНОЕ ИСПРАВЛЕНИЕ: создаём задачу с ОБНОВЛЁННЫМ columnId
+  const taskToMove = { 
+    ...task, 
+    columnId: targetColumnId  // ← Критически важно!
+  };
 
-    // Оптимистичное обновление локального стейта
-    dispatch(removeTask({ columnId: sourceColumnId, taskId: task.id }));
-    dispatch(addTask({ columnId: targetColumnId, task: taskToMove }));
-
-    const updatedColumns = currentBoard.columns.map(col => {
-    if (col.id === sourceColumnId) {
-      // Удаляем задачу из исходной колонки
+  // ✅ Строим обновлённый массив колонок
+  const updatedColumns = currentBoard.columns.map(col => {
+    // Удаляем задачу из исходной колонки (если это не та же колонка)
+    if (col.id === sourceColumnId && sourceColumnId !== targetColumnId) {
       return {
         ...col,
-        tasks: col.tasks.filter(t => t.id !== taskId).map((t, idx) => ({ ...t, order: idx }))
+        tasks: col.tasks
+          .filter(t => t.id !== taskId)
+          .map((t, idx) => ({ ...t, order: idx }))
       };
-    } else if (col.id === targetColumnId) {
-        // Добавляем задачу в целевую колонку
-        return {
-          ...col,
-          tasks: [...col.tasks, taskToMove].map((t, idx) => ({ ...t, order: idx }))
-        };
-      }
-      return col;
-    });
+    }
+    
+    // Добавляем задачу в целевую колонку
+    if (col.id === targetColumnId) {
+      // Если перемещаем внутри той же колонки — сначала удаляем со старой позиции
+      const tasksForTarget = sourceColumnId === targetColumnId 
+        ? col.tasks.filter(t => t.id !== taskId)
+        : col.tasks;
+      
+      return {
+        ...col,
+        tasks: [...tasksForTarget, taskToMove].map((t, idx) => ({ ...t, order: idx }))
+      };
+    }
+    
+    return col;
+  });
 
-    boardService.update(currentBoard.id, { columns: updatedColumns });
+  // ✅ Оптимистичное обновление Redux
+  dispatch(removeTask({ columnId: sourceColumnId, taskId }));
+  dispatch(addTask({ columnId: targetColumnId, task: taskToMove }));
 
-  }, [currentBoard, dispatch]);
+  // ✅ Синхронизация с бэкендом
+  boardService.update(currentBoard.id, { columns: updatedColumns });
+
+}, [currentBoard, dispatch]);
 
   const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {
     if (!currentBoard) return;
@@ -280,13 +260,28 @@ useEffect(() => {
     }
   }, [currentBoard, dispatch]);
 
+  const handleDeleteTask = useCallback(async (columnId: number, taskId: number) => {
+    if (!currentBoard)
+      return;
 
-  const handleBoardTitleChange = (newName: string) => {
+    try {
+      await boardService.deleteTask(currentBoard.id, columnId, taskId);
+
+      dispatch(removeTask({columnId, taskId}));
+    }
+    catch (err: any){
+      console.error('Failed to delete task:', err);
+      dispatch(setError(err.message || 'Не удалось удалить задачу'));
+    }
+  }, [currentBoard, dispatch]);
+
+
+  const handleBoardTitleChange = async (newName: string) => {
     if (!currentBoard) return;
     dispatch(updateBoardName(newName));
     //посылаем обновку на сервер
     console.log('trying to update boardTitle');
-    try{boardService.update(currentBoard.id, {name: newName});}
+    try{await boardService.update(currentBoard.id, {name: newName});}
     catch (err : any)
     {
       alert("Не удалось изменить название борды");
@@ -304,7 +299,7 @@ useEffect(() => {
       return;
     try {
       // Создаём задачу через HTTP
-      const deleteColumn = boardService.deleteColumn(currentBoard.id, columnId);
+      const deleteColumn = await boardService.deleteColumn(currentBoard.id, columnId);
       
       if (!deleteColumn)
         console.log('Колонка не была удалена!');
@@ -384,6 +379,7 @@ useEffect(() => {
                   onUpdateTask={handleUpdateTask}
                   onAddTask={handleAddTask}
                   onDeleteColumn={handleDeleteColumn}
+                  onDeleteTask = {handleDeleteTask}
                 />
               ))}
             
@@ -439,7 +435,6 @@ useEffect(() => {
       </footer>
     </div>
   );
-  //{<SocketTest />};
 };
 
 export default BoardPage;

@@ -150,7 +150,7 @@ nav span {
 
 .task {
   margin: 10px;
-  padding: 0px;
+  padding: 10px;
   cursor: grab;
   user-select: none;
   transition: transform 0.2s, opacity 0.2s;
@@ -277,10 +277,10 @@ nav span {
 
 p {
   margin: 0px;
-  display: -webkit-box;
+  /* display: -webkit-box;
   -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  -webkit-box-orient: vertical; */
+  /*overflow: hidden;*/
   line-clamp: 3;
   line-height: 1em;
 }
@@ -301,6 +301,135 @@ p {
   border-radius: 14px;
   border: 3px solid rgb(148, 193, 153);
   text-align: justify;
+}
+
+
+.task-edit-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 2px solid #0079bf;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.btn-delete-task {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #ff5630;
+  border-radius: 4px;
+  color: #ff5630;
+  font-size: 10px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.task:hover .btn-delete-task {
+  opacity: 1;
+}
+
+.btn-delete-task:hover {
+  background: #ff5630;
+  color: white;
+}
+
+/* === Task Meta (date, tag, priority) === */
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.task-due-date {
+  font-size: 11px;
+  color: #5e6c84;
+  background: #f4f5f7;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.task-due-date--overdue {
+  color: #ff5630;
+  background: #ffebee;
+  font-weight: 600;
+}
+
+.task-tag {
+  font-size: 11px;
+  color: #0052cc;
+  background: #e3e8ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.task-priority {
+  font-size: 12px;
+}
+
+/* === Add Task Form with Date === */
+.add-task-form {
+  background: #ffffff;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.task-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.task-form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5e6c84;
+}
+
+.task-date-input {
+  width: 100%;
+  padding: 8px 10px;
+  border: 2px solid #dfe1e6;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: inherit;
+  color: #172b4d;
+  background: #ffffff;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.task-date-input:focus {
+  outline: none;
+  border-color: #0079bf;
+}
+
+.task-date-input:disabled {
+  background: #f4f5f7;
+  cursor: not-allowed;
+}
+
+/* Календарь (кастомизация для разных браузеров) */
+.task-date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.task-date-input::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .task-start-date {
@@ -457,6 +586,7 @@ button[name=log-out-btn]:hover {
 /* === User Item === */
 .user-item {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;

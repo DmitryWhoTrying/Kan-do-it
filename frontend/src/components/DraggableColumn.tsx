@@ -17,6 +17,7 @@ interface DraggableColumnProps {
   onUpdateTask: (columnId: number, updatedTask: TaskType) => void;
   onAddTask?: (columnId: number, task: Omit<TaskType, 'id'>) => void; // ✅ Новый проп
   onDeleteColumn?: (columnId: number) => void;
+  onDeleteTask?: (columnId: number, taskId: number) => void;
 }
 
 interface DragItem {
@@ -36,7 +37,8 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   onMoveColumn,
   onUpdateTask,
   onAddTask,
-  onDeleteColumn
+  onDeleteColumn,
+  onDeleteTask
 }) => {
   const columnRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
@@ -46,6 +48,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  const [newTaskEndDate, setNewTaskEndDate] = useState('');
 
   // Настройка drag для колонки
   const [{ isDragging }, drag, preview] = useDrag({
@@ -76,6 +79,10 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
       }
     },
     hover: (item, monitor) => {
+      if (item.type !== ItemTypes.COLUMN) {
+        return; // ❌ Задачи не должны запускать перемещение колонок
+      }
+
       if (!columnRef.current) return;
 
       // Обработка перетаскивания колонки
@@ -138,17 +145,20 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
         title: newTaskTitle.trim(),
         description: '',
         order: maxOrder + 1,
+        endDate: newTaskEndDate || undefined,
+        tag: '',
       });
 
       // Очищаем форму
       setNewTaskTitle('');
+      setNewTaskEndDate('');
       setIsAddingTask(false);
     } catch (error) {
       console.error('Failed to create task:', error);
     } finally {
       setIsCreating(false);
     }
-  }, [newTaskTitle, column.id, column.tasks, boardId, onAddTask]);
+  }, [newTaskTitle, column.id, column.tasks, boardId, onAddTask, newTaskEndDate]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -156,6 +166,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
       handleAddTask();
     } else if (e.key === 'Escape') {
       setNewTaskTitle('');
+      setNewTaskEndDate('');
       setIsAddingTask(false);
     }
   };
@@ -169,25 +180,17 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   return (
     <div
       ref={columnRef}
-      className={`column ${isDragging ? 'column-dragging' : ''} ${isOver ? 'drag-over' : ''}`}
-      style={{ opacity: isDragging ? 0.5 : 1 }}
+      className={`column ${currectUser?.permission === 'view-only' ? 'column--read-only' : ''}`}
+      style={{ 
+        opacity
+      }}
     >
+      {/* Заголовок колонки */}
       <div className="column-header">
-        <h2 
-          className="column-name"
-          contentEditable
-          suppressContentEditableWarning
-          onBlur={(e) => handleTitleChange(e.currentTarget.textContent || column.title)}
-        >
-          {column.title}
-        </h2>
-        <span className="drag-handle">⋮⋮</span>
+        <h3 className="column-title">{column.title}</h3>
         <span className="task-count">{column.tasks.length}</span>
-        {/* Кнопка удаления колонки*/}
-        {(currectUser?.permission === 'owner' || 
-          currectUser?.permission === 'edit') 
-          && onDeleteColumn 
-          && (
+        
+        {!(currectUser?.permission ===  'view-only' || currectUser?.permission === 'drag-n-drop') && onDeleteColumn && (
           <button 
             className="btn-delete-column"
             onClick={() => onDeleteColumn(column.id)}
@@ -197,63 +200,89 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
           </button>
         )}
       </div>
-      
+
+      {/* Список задач */}
       <div className="column-tasks">
-        {column.tasks.map(task => (
-          <Task
+        {column.tasks
+          .slice()
+          .sort((a, b) => (a.order || 0) - (b.order || 0))
+          .map((task) => (
+            <Task
               key={task.id}
               task={task}
               columnId={column.id}
               boardId={boardId}
               onUpdateTask={onUpdateTask}
+              onDeleteTask={onAddTask ? (colId, taskId) => {
+                onDeleteTask?.(colId, taskId);
+              } : undefined}
             />
-        ))}
+          ))}
 
-         {/* Форма добавления задачи */}
-        {(currectUser?.permission === 'owner' ||
-           currectUser?.permission ==='edit') ?
-          (isAddingTask ? (
-          <div className="add-task-form">
-            <textarea
-              placeholder="Название задачи"
-              value={newTaskTitle}
-              onChange={(e) => setNewTaskTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
-              autoFocus
-              className="task-input"
-              rows={3}
-              disabled={isCreating}
-            />
-            <div className="add-task-actions">
-              <button 
-                onClick={handleAddTask}
-                disabled={!newTaskTitle.trim() || isCreating}
-                className="btn-add-task"
-              >
-                {isCreating ? 'Создание...' : 'Добавить'}
-              </button>
-              <button 
-                onClick={() => {
-                  setNewTaskTitle('');
-                  setIsAddingTask(false);
-                }}
-                className="btn-cancel"
+        {/* Форма добавления задачи */}
+        {!(currectUser?.permission === 'view-only' || currectUser?.permission === 'drag-n-drop') 
+        ? (
+          isAddingTask ? (
+            <div className="add-task-form">
+              <textarea
+                placeholder="Название задачи"
+                value={newTaskTitle}
+                onChange={(e) => setNewTaskTitle(e.target.value)}
+                className="task-input"
+                rows={2}
                 disabled={isCreating}
-              >
-                Отмена
-              </button>
+                autoFocus
+              />
+              
+              {/* ✅ Поле выбора даты дедлайна */}
+              <div className="task-form-group">
+                <label className="task-form-label">
+                  📅 Крайний срок (необязательно)
+                </label>
+                <input
+                  type="date"
+                  value={newTaskEndDate}
+                  onChange={(e) => setNewTaskEndDate(e.target.value)}
+                  className="task-date-input"
+                  disabled={isCreating}
+                  min={new Date().toISOString().split('T')[0]} // Нельзя выбрать прошедшую дату
+                />
+              </div>
+
+              <div className="add-task-actions">
+                <button 
+                  onClick={handleAddTask}
+                  disabled={!newTaskTitle.trim() || isCreating}
+                  className="btn-add-task"
+                >
+                  {isCreating ? 'Создание...' : 'Добавить'}
+                </button>
+                <button 
+                  onClick={() => {
+                    setNewTaskTitle('');
+                    setNewTaskEndDate('');
+                    setIsAddingTask(false);
+                  }}
+                  className="btn-cancel"
+                  disabled={isCreating}
+                >
+                  Отмена
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <button 
+              onClick={() => setIsAddingTask(true)}
+              className="btn-add-task-toggle"
+            >
+              + Добавить задачу
+            </button>
+          )
         ) : (
-          /* Кнопка показа формы */
-          <button 
-            onClick={() => setIsAddingTask(true)}
-            className="btn-add-task-toggle"
-            disabled={isCreating}
-          >
-            + Добавить задачу
-          </button>
-        )) : <></>}
+          <div className="read-only-hint">
+            <small>Только просмотр</small>
+          </div>
+        )}
       </div>
     </div>
   );

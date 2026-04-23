@@ -253,7 +253,7 @@ export class BoardService {
 
   async deleteTask(boardId: number, columnId: number, taskId: number):Promise<Boolean>{
     const response = await apiClient.delete<ApiResponse<Boolean>>(
-      `${this.taskEndpoint}/column/${columnId}/board/${boardId}`
+      `${this.taskEndpoint}/${taskId}/column/${columnId}/board/${boardId}`
     );
 
     if (!response.data.success || !response.data.data){
