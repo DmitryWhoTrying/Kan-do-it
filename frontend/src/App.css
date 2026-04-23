@@ -368,6 +368,313 @@ button[name=log-out-btn]:hover {
     margin-left: 200px; /* Отступ равен ширине расширенного меню */
 }
 
+
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  background: #ffffff;
+  border-right: 1px solid #dfe1e6;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  overflow-y: auto;
+  height: calc(100vh - 80px); /* Adjust based on your header height */
+}
+
+.sidebar-title {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #172b4d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* === Users Section === */
+.users-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: inherit;
+  width: 100%;
+  padding: 0px 0px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  /*transition: background 0.2s;*/
+  text-align: left;
+}
+
+.users-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #172b4d;
+}
+
+.users-count {
+  background: #dfe1e6;
+  color: #5e6c84;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.toggle-icon {
+  font-size: 10px;
+  color: #6b778c;
+  transition: transform 0.2s;
+}
+
+.toggle-icon.expanded {
+  transform: rotate(180deg);
+}
+
+/* === Users List === */
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+.users-error {
+  background: #ffebee;
+  color: #c62828;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+/* === User Item === */
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f9f9f9;
+  border-radius: 6px;
+  gap: 8px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0; /* Для обрезки длинных имен */
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #172b4d;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-permission-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  width: fit-content;
+}
+
+/* === User Actions (owner only) === */
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.permission-select {
+  padding: 4px 8px;
+  border: 1px solid #dfe1e6;
+  border-radius: 4px;
+  font-size: 11px;
+  background: white;
+  cursor: pointer;
+  max-width: 120px;
+}
+
+.permission-select:hover {
+  border-color: #0079bf;
+}
+
+.permission-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-remove-user {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid #ff5630;
+  border-radius: 4px;
+  color: #ff5630;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-remove-user:hover:not(:disabled) {
+  background: #ff5630;
+  color: white;
+}
+
+.btn-remove-user:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.user-loading {
+  font-size: 14px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* === Add User Section === */
+.add-user-section {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px dashed #dfe1e6;
+}
+
+.btn-add-user-toggle {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 2px dashed #0079bf;
+  border-radius: 6px;
+  color: #0079bf;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.btn-add-user-toggle:hover {
+  background: rgba(0, 121, 191, 0.05);
+  border-style: solid;
+}
+
+.add-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.add-user-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #0079bf;
+  border-radius: 4px;
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.add-user-input:focus {
+  outline: none;
+  border-color: #005a8f;
+}
+
+.add-user-permission {
+  padding: 8px 12px;
+  border: 1px solid #dfe1e6;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+}
+
+.add-user-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-add-user-confirm {
+  flex: 1;
+  padding: 6px 12px;
+  background: #0079bf;
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-add-user-confirm:hover:not(:disabled) {
+  background: #005a8f;
+}
+
+.btn-add-user-confirm:disabled {
+  background: #a0c4dd;
+  cursor: not-allowed;
+}
+
+.btn-add-user-cancel {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #dfe1e6;
+  border-radius: 4px;
+  color: #5e6c84;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-add-user-cancel:hover {
+  background: #f4f5f7;
+  color: #172b4d;
+}
+
+.users-hint {
+  display: block;
+  padding: 8px 12px;
+  color: #6b778c;
+  font-size: 11px;
+  font-style: italic;
+  text-align: center;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    left: -280px;
+    top: 64px; /* header height */
+    height: calc(100vh - 64px);
+    z-index: 100;
+    transition: left 0.3s;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+}
+
 .toggle-btn {
   background-color: #528f6a;
   color: white;
@@ -408,6 +715,7 @@ button[name=log-out-btn]:hover {
 .text {
   opacity: 0;
   transition: opacity 0.2s ease;
+  color: white;
 }
 
 #sidebar.expanded .text {

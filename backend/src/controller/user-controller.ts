@@ -19,7 +19,7 @@ export class UserController{
     }
 
     async findByName(req: Request, res: Response){
-        const user = await this.userService.findByName(req.body);
+        const user = await this.userService.findByName(String(req.params.name));
         if (user)
             res.json({success:true, data:user});
         else

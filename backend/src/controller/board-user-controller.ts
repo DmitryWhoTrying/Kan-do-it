@@ -27,6 +27,7 @@ export class BoardUserController{
     }
 
     async create(req: Request, res: Response){
+        console.log('handle board user creating', req.body)
         const boardUser = await this.boardUserService.create(req.body.boardUser);
 
         if (boardUser)

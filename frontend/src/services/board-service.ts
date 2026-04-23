@@ -1,6 +1,6 @@
 // frontend/src/services/board.service.ts
 import apiClient from './api';
-import { Board, BoardUser, Column, Task} from '../../../shared/types';
+import { Board, BoardUser, Column, Task, User} from '../../../shared/types';
 import { socketService } from '../socket/socket-service';
 
 // Тип для ответа API (единый формат)
@@ -15,6 +15,7 @@ export class BoardService {
   private readonly columnEndpoint = '/columns';
   private readonly taskEndpoint = '/tasks';
   private readonly boardUserEndpoint = '/boardUsers';
+  private readonly userEndpoint = '/users';
 
   // === GET запросы ===
 
@@ -128,6 +129,32 @@ export class BoardService {
     if (!response.data.success || !response.data.data) {
       throw new Error(response.data.error || 'Failed to add user to board');
     }
+    return response.data.data;
+  }
+
+  async getUserByName(username: string){
+    const response = await apiClient.get<ApiResponse<User>>(`${this.userEndpoint}/username/${username}`);
+
+    if (!response.data.success || ! response.data.data){
+      throw new Error(response.data.error || 'Failed to find user');
+    }
+    
+    return response.data.data;
+  }
+
+
+
+  async addBoardUserByName(boardId: number, username: string, permission: BoardUser['permission']):Promise<BoardUser>{
+    const user = await boardService.getUserByName(username);
+
+    if (!user)
+        throw new Error('No user with such name');
+
+    const response = await apiClient.post<ApiResponse<BoardUser>>(this.boardUserEndpoint, {boardUser: {userId:user.id, boardId, permission}})
+
+    if (!response.data.success || !response.data.data)
+      throw new Error(response.data.error || 'failed to find user with such name');
+
     return response.data.data;
   }
 

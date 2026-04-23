@@ -1747,3 +1747,5 @@ backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs
 backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs.map
 backend/node_modules/@prisma/client/scripts/default-index.js
 backend/node_modules/@prisma/client-runtime-utils/package.json
+backend/prisma/migrations/migration_lock.toml
+backend/prisma/migrations/20260421095604_add_cascade_delete/migration.sql

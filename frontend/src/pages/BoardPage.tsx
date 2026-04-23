@@ -13,7 +13,7 @@ import { BoardService, boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
-import { Board, Column, Column as ColumnType, Task } from '../../../shared/types';
+import { Board, BoardUser, Column, Column as ColumnType, Task } from '../../../shared/types';
 import { authService } from '../services/auth-service';
 import { SocketTest } from '../components/socket-test';
 import { current } from '@reduxjs/toolkit';
@@ -28,7 +28,8 @@ const BoardPage: React.FC = () => {
   //локалстейты пиздец надо
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
-  
+  const [boardUsers, setBoardUsers] = useState<BoardUser[]>([]);
+
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
 
 
@@ -99,6 +100,21 @@ const BoardPage: React.FC = () => {
 
   loadBoard();
 }, [boardId, dispatch]); 
+
+
+//загрузка boardusers
+useEffect(() => {
+  const loadBoardUsers = async () => {
+    if (!boardId) return;
+    try {
+      const users = await boardService.getByBoardId(Number(boardId));
+      setBoardUsers(users);
+    } catch (err) {
+      console.error('Failed to load board users:', err);
+    }
+  };
+  loadBoardUsers();
+}, [boardId]);
 
   // 
   // и подписка на сокеты ===
@@ -328,7 +344,12 @@ const BoardPage: React.FC = () => {
       </header>
 
       <div className="main-div">
-        <Sidebar />
+        <Sidebar 
+          boardId={currentBoard?.id || 0}
+          currentUser={currentUser}
+          boardUsers={boardUsers}
+          onUsersChange={setBoardUsers}
+        />
         
         <div className="work-space">
 
