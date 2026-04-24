@@ -13,7 +13,7 @@ import { BoardService, boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
-import { Board, BoardUser, Column, Column as ColumnType, Task, TaskImage } from '../../../shared/types';
+import { Board, BoardUser, Column, Column as ColumnType, Permission, Permission as PermissionEnum, Task, TaskImage } from '../../../shared/types';
 import { authService } from '../services/auth-service';
 import { SocketTest } from '../components/socket-test';
 import { current } from '@reduxjs/toolkit';
@@ -75,6 +75,22 @@ const BoardPage: React.FC = () => {
     dispatch(removeTask(data));
   }, [dispatch]);
 
+  const handleUserKicked = useCallback((userId: number) => {
+    if (currentUser?.userId === userId) {
+      alert('Вы были исключены из доски владельцем!');
+      navigate('/'); // Редирект на список досок
+    }
+  }, [navigate]);
+
+  const handleUserRoleChanged = useCallback((userId: number, permission: BoardUser['permission']) => {
+    if (currentUser?.userId === userId) {
+
+      alert(`Ваши права были изменены на: ${permission}`);
+      dispatch(setCurrentUser({ ...currentUser, permission }));
+
+    }
+  }, [currentUser, dispatch]);
+
   // === Загрузка доски
 
   useEffect(() => {
@@ -109,6 +125,8 @@ const BoardPage: React.FC = () => {
       socketService.onColumnDeleted(handleColumnDeleted),
       socketService.onTaskCreated(handleTaskCreated),
       socketService.onTaskDeleted(handleTaskDeleted),
+      socketService.onUserRoleChanged(handleUserRoleChanged),
+      socketService.onUserKicked(handleUserKicked)
     ];
 
     return () => {

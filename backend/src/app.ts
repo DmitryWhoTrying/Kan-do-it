@@ -78,7 +78,7 @@ const boardController = new BoardController(boardService, socketEmitter);
 
 const prismaBoardUserRepo = new PrimaBoardUserRepository(prisma);
 const boardUserService = new BoardUserService(prismaBoardUserRepo);
-const boardUserController = new BoardUserController(boardUserService);
+const boardUserController = new BoardUserController(boardUserService, socketEmitter);
 
 const prismaUserRepo = new UserPrismaRepository(prisma);
 const userService = new UserService(prismaUserRepo);

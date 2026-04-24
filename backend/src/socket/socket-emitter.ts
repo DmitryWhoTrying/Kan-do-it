@@ -47,4 +47,13 @@ export class SocketEmitter {
     emitTaskDeleted(boardId: number, taskId: number, columnId: number) {
         this.io.to(`board:${boardId}`).emit('task:deleted', {taskId, columnId, boardId});
     }
+
+    // === USER EVENTS ===
+    emitUserKicked(boardId: number, userId: number) {
+        this.io.to(`board:${boardId}`).emit('user:kicked', userId);
+    }
+
+    emitUserRoleChanged(boardId: number, userId: number, permission: Board['users'][0]['permission']) {
+        this.io.to(`board:${boardId}`).emit('user:role:changed', userId, permission);
+    }
 }

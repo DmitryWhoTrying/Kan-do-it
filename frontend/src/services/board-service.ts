@@ -151,6 +151,7 @@ export class BoardService {
     if (!user)
         throw new Error('No user with such name');
 
+    console.log('sent request to add user', user, 'to board', boardId, 'with permission', permission);
     const response = await apiClient.post<ApiResponse<BoardUser>>(this.boardUserEndpoint, {boardUser: {userId:user.id, boardId, permission}})
 
     if (!response.data.success || !response.data.data)
@@ -161,6 +162,7 @@ export class BoardService {
 
   /** Обновить права пользователя */
   async updateUserPermission(boardId: number, userId: number, permission: BoardUser['permission']): Promise<BoardUser> {
+    console.log('Trying to update user permission, boardId:', boardId, 'userId:', userId, 'permission:', permission);
     const response = await apiClient.put<ApiResponse<BoardUser>>(
       `${this.boardUserEndpoint}/boards/${boardId}/users/${userId}`,
       { permission }

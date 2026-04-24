@@ -14,8 +14,8 @@ export interface SidebarProps {
 const PERMISSIONS = [
   { value: 'owner', label: '👑 Владелец', color: '#f57f17' },
   { value: 'edit', label: '✏️ Редактор', color: '#1976d2' },
-  { value: 'drag-n-drop', label: '🖱️ Перетаскивание', color: '#388e3c' },
-  { value: 'view-only', label: '👁️ Только просмотр', color: '#616161' },
+  { value: 'drag-n-drop', label: '🖱️ Drag&Drop', color: '#388e3c' },
+  { value: 'view-only', label: '👁️ Просмотр', color: '#616161' },
 ] as const;
 
 type PermissionValue = typeof PERMISSIONS[number]['value'];
@@ -93,9 +93,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       const updatedUsers = boardUsers.filter(u => u.userId !== userId);
       onUsersChange?.(updatedUsers);
 
-      // Уведомляем остальных через сокет (бэкенд тоже должен это сделать)
-      // socketService.emitUserRemoved?.(boardId, userId);
-
     } catch (err: any) {
       console.error('Failed to remove user:', err);
       setError(err.message || 'Не удалось удалить пользователя');
@@ -106,13 +103,15 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const handleChangePermission = useCallback(async (userId: number, newPermission: PermissionValue) => {
     if (!isOwner) return;
+    if (!currentBoard)
+      return;
 
     try {
       setIsLoading(prev => ({ ...prev, [userId]: true }));
       setError(null);
 
       // HTTP-запрос на обновление прав
-      await boardService.updateUserPermission(boardId, userId, newPermission);
+      await boardService.updateUserPermission(currentBoard?.id, userId, newPermission);
 
       // Обновляем локальный стейт
       const updatedUsers = boardUsers.map(u => 
@@ -120,26 +119,24 @@ const Sidebar: React.FC<SidebarProps> = ({
       );
       onUsersChange?.(updatedUsers);
 
-      // Уведомляем через сокет
-      //socketService.emitUserPermissionChanged?.(boardId, userId, newPermission);
-
     } catch (err: any) {
       console.error('Failed to update permission:', err);
       setError(err.message || 'Не удалось изменить права');
     } finally {
       setIsLoading(prev => ({ ...prev, [userId]: false }));
     }
-  }, [isOwner, boardId, boardUsers, onUsersChange]);
+  }, [isOwner, currentBoard?.id, boardUsers, onUsersChange]);
 
   const handleAddUser = useCallback(async () => {
     if (!isOwner || !newUsername.trim()) return;
+    if (!currentBoard) return;
 
     try {
       setIsLoading(prev => ({ ...prev, add: true }));
       setError(null);
 
       // HTTP-запрос на добавление
-      const addedUser = await boardService.addBoardUserByName(boardId,
+      const addedUser = await boardService.addBoardUserByName(currentBoard?.id,
         newUsername.trim(),
         newUserPermission,
       );
@@ -214,7 +211,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {isUsersExpanded && (
             <div className="users-list">
               {/* Ошибка */}
-              {error && <div className="users-error">{error}</div>}
+              {error && <div className="users-error"><p>Пользователь не найден</p><p>или уже добавлен!</p></div>}
 
               {/* Список пользователей */}
               {boardUsers
