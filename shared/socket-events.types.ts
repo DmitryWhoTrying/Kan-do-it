@@ -1,4 +1,4 @@
-import { Board, BoardUser } from "../shared/types";
+import { Board, BoardUser, TaskImage } from "../shared/types";
 import { Task, Column, Permission } from "./types";
 
 export interface ClientToServerEvents{
@@ -45,6 +45,19 @@ export interface ServerToClientEvents{
     'task:updated': (data: {columnId: number, task: Task}) => void;
     'task:deleted': (data: {taskId: number, columnId: number, boardId: number}) => void;
 
+    //тестовое сообщение
+    'test:event': (message: string) => void;
+
+
+    //события пользователя
+    'user:kicked': (userId: number) => void;
+    'user:role:changed': (userId: number, permission: BoardUser['permission']) => void;
+
+    //события картинки
+    'task:image:added': (data:{taskId: number, image: TaskImage}) => void;
+    'task:image:updated': (data:{taskId: number, imageId: number, image: TaskImage}) => void;
+    'task:image:deleted': (data:{taskId: number, imageId: number}) => void;
+
     //ответы об успехе операции (опционально можно ловить, отказались в ходе разработки)
     'board:update:success': (board: Board) => void;
     'board:delete:success': ( boardId: number) => void;
@@ -56,11 +69,6 @@ export interface ServerToClientEvents{
     'task:create:success': (task: Task) => void;
     'task:update:success': (task: Task) => void;
     'task:delete:success': ( taskId: number ) => void;
-
-    'test:event': (message: string) => void;
-
-    'user:kicked': (userId: number) => void;
-    'user:role:changed': (userId: number, permission: BoardUser['permission']) => void;
 
     //ответ об ошибке выполнения операции
     'error': (message: string) => void;

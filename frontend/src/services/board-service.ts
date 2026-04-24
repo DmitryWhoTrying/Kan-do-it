@@ -269,7 +269,7 @@ export class BoardService {
   async uploadTaskImage(boardId: number, taskId: number, formData: FormData): Promise<TaskImage> {
     console.log('Uploading image for task', taskId, 'with formData', formData);
     const response = await apiClient.post<ApiResponse<TaskImage>>(
-        `${this.taskEndpoint}/${taskId}/images`, formData
+        `${this.boardEndpoint}/${boardId}${this.taskEndpoint}/${taskId}/images`, formData
     );
     if (!response.data.success || !response.data.data){
       throw new Error(response.data.error || 'Failed to upload image');
@@ -279,7 +279,7 @@ export class BoardService {
 
   async deleteTaskImage(boardId: number, taskId: number, imageId: number): Promise<boolean>{
     const response = await apiClient.delete<ApiResponse<string>>(
-      `${this.taskEndpoint}/${taskId}/images/${imageId}`
+      `${this.boardEndpoint}/${boardId}${this.taskEndpoint}/${taskId}/images/${imageId}`
     );
 
     if (!response.data.success){

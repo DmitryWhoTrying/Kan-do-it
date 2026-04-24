@@ -15,7 +15,7 @@ import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
 import { Board, BoardUser, Column, Column as ColumnType, Permission, Permission as PermissionEnum, Task, TaskImage } from '../../../shared/types';
 import { authService } from '../services/auth-service';
-import { SocketTest } from '../components/socket-test';
+
 import { current } from '@reduxjs/toolkit';
 
 export const ItemTypes = { TASK: 'task', COLUMN: 'column' };
@@ -91,6 +91,46 @@ const BoardPage: React.FC = () => {
     }
   }, [currentUser, dispatch]);
 
+  const handleTaskImageAdded = useCallback((data:{taskId: number, image: TaskImage}) => {
+    console.log('🎯 CUSTOM HANDLER: task:image:added', data);
+
+    //check if such image already exists in the task to avoid duplicates (can happen if user has multiple tabs open)
+    const task = currentBoard?.columns.flatMap(col => col.tasks).find(t => t.id === data.taskId);
+    if (task?.images?.find(img => img.id === data.image.id)) {
+      console.log('Image already exists in task, skipping update');
+      return;
+    }
+
+    dispatch(updateTask({
+      taskId: data.taskId,
+      updates: {
+        images: [...(currentBoard?.columns.flatMap(col => col.tasks).find(t => t.id === data.taskId)?.images || []), data.image]
+      }
+    }));
+    console.log('Task image added in Redux');
+    }, [dispatch, currentBoard]);
+
+  const handleTaskImageUpdated = useCallback((data:{taskId: number, imageId: number, image: TaskImage}) => {
+    console.log('🎯 CUSTOM HANDLER: task:image:updated', data);
+    console.log('Currently not implemented, but the handler is ready to update task image in redux when the event will be emitted');
+  }, [dispatch, currentBoard]);
+
+  const handleTaskImageDeleted = useCallback((data:{taskId: number, imageId: number}) => {
+    console.log('🎯 CUSTOM HANDLER: task:image:deleted', data);
+
+    console.log('Task image deleted in Redux');
+
+    dispatch(updateTask({
+      taskId: data.taskId,
+      updates: {
+        images: 
+            currentBoard?.columns.flatMap(col => col.tasks).
+              find(t => t.id === data.taskId)?.
+              images?.filter(img => img.id !== data.imageId)
+      }
+    }));
+  }, [dispatch, currentBoard]);
+
   // === Загрузка доски
 
   useEffect(() => {
@@ -126,7 +166,10 @@ const BoardPage: React.FC = () => {
       socketService.onTaskCreated(handleTaskCreated),
       socketService.onTaskDeleted(handleTaskDeleted),
       socketService.onUserRoleChanged(handleUserRoleChanged),
-      socketService.onUserKicked(handleUserKicked)
+      socketService.onUserKicked(handleUserKicked),
+      socketService.onTaskImageAdded(handleTaskImageAdded),
+      socketService.onTaskImageUpdated(handleTaskImageUpdated),
+      socketService.onTaskImageDeleted(handleTaskImageDeleted)
     ];
 
     return () => {
@@ -376,7 +419,6 @@ const handleAddTaskImage = useCallback(async (taskId: number, formData: FormData
     }
   }, [currentBoard, dispatch]);
 
-
   const handleLogout = () => {
     if (!window.confirm('Вы уверены, что хотите выйти?')) return;
     
@@ -385,8 +427,6 @@ const handleAddTaskImage = useCallback(async (taskId: number, formData: FormData
     dispatch(logout());
     navigate('/login');
   };
-
-
 
   // === Рендеринг ===
   if (isLoading) return <div className="loading">Загрузка...</div>;

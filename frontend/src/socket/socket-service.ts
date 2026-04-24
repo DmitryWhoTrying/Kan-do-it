@@ -1,7 +1,7 @@
 //import { disconnect } from "node:cluster"; пока не очень надо
 import { ClientToServerEvents, ServerToClientEvents as ServerToClientEvents } from "../../../shared/socket-events.types";
 import { io, Socket } from "socket.io-client";
-import { Board, BoardUser, Column, Permission, Task, User } from "../../../shared/types";
+import { Board, BoardUser, Column, Permission, Task, TaskImage, User } from "../../../shared/types";
 import { useCallback } from "react";
 
 class SocketService {
@@ -41,7 +41,7 @@ class SocketService {
         this.socket.onAny((event, arg) => {
             //console.log(`📥 [SOCKET IN] ${event}`, arg);
             console.log(`📥 [RAW] Event: "${event}", Args:`, arg);
-    console.log('  Expected: "board:updated", "column:created", etc.');
+
         });
     }
 
@@ -154,6 +154,29 @@ class SocketService {
             this.socket?.off('user:role:changed', callback);
         }
     }
+
+    //картинки
+    onTaskImageAdded(callback: (data:{taskId: number, image: TaskImage}) => void){
+        this.socket?.on('task:image:added', callback);
+        return () => {
+            this.socket?.off('task:image:added', callback);
+        }
+    }
+
+    onTaskImageUpdated(callback: (data:{taskId: number, imageId: number, image: TaskImage}) => void){
+        this.socket?.on('task:image:updated', callback);
+        return () => {
+            this.socket?.off('task:image:updated', callback);
+        }
+    }
+
+    onTaskImageDeleted(callback: (data:{taskId: number,  imageId: number}) => void){
+        this.socket?.on('task:image:deleted', callback);
+        return () => {
+            this.socket?.off('task:image:deleted', callback);
+        }
+    }
+
 
       // Отписка от событий
   off(event: any, callback?: (...args: any[]) => void): void {
