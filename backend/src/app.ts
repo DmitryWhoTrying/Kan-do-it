@@ -34,6 +34,7 @@ import { AuthService } from './service/auth-service';
 import { createTaskImageRoutes } from './routes/task-image-routes';
 import { TaskImageController } from './controller/task-image-controller';
 import path from 'path';
+import { upload } from './lib/upload-config';
 
 dotenv.config();
 
@@ -118,7 +119,8 @@ console.log('✓ Task routes registered');
 app.use('/api/auth', createAuthRoutes(authController));
 console.log('✓ Authentification routes registered')
 
-app.use('/api/images', createTaskImageRoutes(taskImageController))
+app.use('/api', createTaskImageRoutes(taskImageController))
+console.log('✓ Task image routes registered')
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -148,12 +150,23 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   });
 });
 
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+app.use('/uploads', express.static(path.join(__dirname, '../uploads/tasks'), {
   maxAge: '1y', // Кэшировать на 1 год
-  setHeaders: (res, path) => {
-    res.setHeader('Access-Control-Allow-Origin', '*'); // Разрешить CORS для всех доменов
+  setHeaders: (res, filepath) => {
+    // ✅ Разрешаем кросс-доменное использование
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
   }
 }));
+
+app.post('/debug-upload', upload.single('image'), (req, res) => {
+  console.log('🧪 Debug route:', {
+    hasFile: !!req.file,
+    file: req.file,
+    body: req.body
+  });
+  res.json({ success: true, file: req.file });
+});
 
 // 404 handler (должен быть последним)
 app.use((req, res) => {

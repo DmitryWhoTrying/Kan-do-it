@@ -64,8 +64,8 @@ nav span {
 .column {
   display: flex;
   flex-direction: column;
-  min-width: 280px;
-  max-width: 280px;
+  min-width: 320px;
+  max-width: 400px;
   border-radius: 8px;
   padding: 12px;
   background-color:#86f2be;
@@ -1608,17 +1608,17 @@ footer div {
 }
 
 .file-input {
-  width: 100%;
+  width: 90%;
   padding: 8px;
   border: 2px dashed #0079bf;
   border-radius: 6px;
-  background: #f9f9f9;
+  background: rgb(197, 244, 110);
   cursor: pointer;
 }
 
 .file-input:hover {
   border-color: #005a8f;
-  background: #f0f7ff;
+  background: rgb(197, 244, 110);
 }
 
 /* === Preview === */

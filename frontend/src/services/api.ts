@@ -4,9 +4,6 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
 // Создаём инстанс с базовыми настройками
 const apiClient: AxiosInstance = axios.create({
   baseURL: 'http://localhost:3000/api',
-  headers: {
-    'Content-Type': 'application/json',
-  },
   withCredentials: true,
 });
 

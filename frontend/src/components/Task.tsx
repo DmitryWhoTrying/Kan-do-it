@@ -178,7 +178,9 @@ const Task: React.FC<TaskProps> = ({
           <span className="task-tag">{task.tag}</span>
         )}
         </div>
-        {/*// После мета-информации задачи:*/}
+      </div>
+      {/*// После мета-информации задачи:*/}
+      <h4 style={{margin:'0px'}}>Прикрепленные файлы</h4>
         {(task.images?.length || 0) > 0 && (
           <div className="task-images">
             {task.images?.map((img, idx) => (
@@ -207,7 +209,7 @@ const Task: React.FC<TaskProps> = ({
         )}
 
         {/* Кнопка добавления изображения */}
-        {currentUser?.permission === 'owner' || currentUser?.permission === 'edit' && (
+        {(currentUser?.permission === 'owner' || currentUser?.permission === 'edit') && (
           <TaskImageUpload
             taskId={task.id}
             boardId={boardId}
@@ -220,7 +222,6 @@ const Task: React.FC<TaskProps> = ({
             }}
           />
         )}
-      </div>
       </div>
     </div>
   );

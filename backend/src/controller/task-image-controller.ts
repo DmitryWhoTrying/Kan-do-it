@@ -10,7 +10,20 @@ export class TaskImageController {
 
     //POST /api/tasks/:taskId/images
     async upload(req: Request, res: Response) {
+        console.log('🎯 Controller reached:', {
+        originalUrl: req.originalUrl,  // Полный URL с префиксом
+        url: req.url,                   // URL относительно роутера
+        params: req.params
+        });
+
         try{
+            console.group('📥 Upload Debug');
+            console.log('URL:', req.originalUrl);
+            console.log('Content-Type:', req.headers['content-type']);  // ← ВАЖНО!
+            console.log('Has file?:', !!req.file);  // ← ВАЖНО!
+            console.log('File details:', req.file);  // ← ВАЖНО!
+            console.log('Body:', req.body);
+            console.groupEnd();
             const taskId = Number(req.params.taskId);
             const file = req.file;
 
@@ -21,7 +34,7 @@ export class TaskImageController {
             const processed = await imageService.processImage(file.path);
             const taskImage = await prisma.taskImage.create({
                 data: {
-                    taskId,
+                    task: {connect: { id: taskId }},
                     filename: file.originalname,
                     storedName: file.filename,
                     mimetype: file.mimetype,
@@ -30,7 +43,7 @@ export class TaskImageController {
                     height: processed.height,
                     url: processed.url,
                     thumbnailUrl: processed.thumbnailUrl,
-                    order: await prisma.taskImage.count({ where: { taskId } }) // Порядок - количество уже существующих изображений для этой задачи
+                    order: await prisma.taskImage.count({ where: {task: {is:{id:  taskId }} }}) // Порядок - количество уже существующих изображений для этой задачи
                 }
             });
 

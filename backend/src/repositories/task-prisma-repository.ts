@@ -9,7 +9,8 @@ export class PrismaTaskRepository implements ITaskRepository{
 
     async findByColumn(columnId: number): Promise<Task[]> {
         const prismaTasks = await this.prisma.task.findMany({
-            where: {columnId: columnId}
+            where: {columnId: columnId},
+            include: {images: true}
         })
 
         if (!prismaTasks)
@@ -68,7 +69,8 @@ export class PrismaTaskRepository implements ITaskRepository{
             include:{
                 Column: {where:
                     {id: columnId}
-                }
+                },
+                images: true
             }
         });
 
@@ -98,7 +100,8 @@ export class PrismaTaskRepository implements ITaskRepository{
     async find(taskID: number): Promise<Task | null> {
         const prismaTask = await this.prisma.task.findUnique(
             {
-                where: {id: taskID}
+                where: {id: taskID},
+                include: {images: true}
             }
         )
 

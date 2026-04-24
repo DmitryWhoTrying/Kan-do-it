@@ -16,6 +16,7 @@ export class BoardService {
   private readonly taskEndpoint = '/tasks';
   private readonly boardUserEndpoint = '/boardUsers';
   private readonly userEndpoint = '/users';
+  private readonly taskImageEndpoint = '/images';
 
   // === GET запросы ===
 
@@ -264,8 +265,9 @@ export class BoardService {
   }
 
   async uploadTaskImage(boardId: number, taskId: number, formData: FormData): Promise<TaskImage> {
+    console.log('Uploading image for task', taskId, 'with formData', formData);
     const response = await apiClient.post<ApiResponse<TaskImage>>(
-        `${this.taskEndpoint}/${taskId}/images`, formData, {headers: {'Content-Type': 'multipart/form-data'}}
+        `${this.taskEndpoint}/${taskId}/images`, formData
     );
     if (!response.data.success || !response.data.data){
       throw new Error(response.data.error || 'Failed to upload image');
@@ -287,7 +289,7 @@ export class BoardService {
 
   async getTaskImages(boardId: number, taskId: number): Promise<TaskImage[]>{
     const response = await apiClient.get<ApiResponse<TaskImage[]>>(
-      `/${this.taskEndpoint}/${taskId}/images`
+      `${this.taskEndpoint}/${taskId}/images`
     );
 
     if (!response.data.success || !response.data.data){

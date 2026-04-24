@@ -18,7 +18,13 @@ export class PrismaBoardRepository implements IBoardRepository{
                 include: { user: true } 
             },
             columns: {
-                include: {tasks: true},
+                include: {
+                    tasks: 
+                    {
+                        orderBy: { order: 'asc' },
+                        include: {images: true},
+                    }
+                },
                 orderBy: { order: 'asc' }
             }
             }

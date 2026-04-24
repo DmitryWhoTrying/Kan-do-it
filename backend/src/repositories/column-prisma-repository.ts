@@ -13,7 +13,7 @@ export class PrismaColumnRepository implements IColumnRepository{
             boardId: boardID,
         },
         include: {
-            tasks: true,
+            tasks: {include: {images: true}, orderBy: {order: 'asc'}}
         },
         orderBy: {
             order: 'asc',
@@ -72,7 +72,7 @@ export class PrismaColumnRepository implements IColumnRepository{
             where:{id: columnID},
             data: updateData,
             include:{
-                tasks: true
+                tasks: {include: {images: true}, orderBy: {order: 'asc'}}
             }
         });
 
@@ -96,7 +96,7 @@ export class PrismaColumnRepository implements IColumnRepository{
     async findAll(): Promise<Column[]> {
         const prismaColumns = await this.prisma.column.findMany({
             include:{
-                tasks: true
+                tasks: {include: {images: true}, orderBy: {order: 'asc'}}   
             }
         });
 
@@ -109,7 +109,7 @@ export class PrismaColumnRepository implements IColumnRepository{
     async find(columnID: number): Promise<Column | null>{
         const prismaColumn = await this.prisma.column.findUnique({
             where:{id: columnID},
-            include:{tasks: true}
+            include:{tasks: {include: {images: true}, orderBy: {order: 'asc'}}}
         })
         
         if (!prismaColumn)
