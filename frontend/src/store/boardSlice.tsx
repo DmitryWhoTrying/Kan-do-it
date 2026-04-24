@@ -1,6 +1,6 @@
 // frontend/src/store/slices/boardSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Board, BoardUser, Column, Task } from '../../../shared/types';
+import { Board, BoardUser, Column, Task, TaskImage } from '../../../shared/types';
 import { act } from 'react';
 
 interface BoardState {
@@ -248,8 +248,40 @@ const boardSlice = createSlice({
         }
       }
     },
-  },
-});
+
+    addTaskImage: (state, action: PayloadAction<{ taskId: number; image: TaskImage }>) => {
+      if (!state.currentBoard) return;
+
+      for (const column of state.currentBoard.columns) {
+        const task = column.tasks.find(t => t.id === action.payload.taskId);
+        if (task) {
+          if (!task.images) {
+            task.images = [];
+          }
+
+          if (task.images.find(img => img.id === action.payload.image.id))
+            return;
+
+          task.images.push(action.payload.image);
+          return;
+        }
+      }
+    },
+
+    deleteTaskImage: (state, action: PayloadAction<{ taskId: number; imageId: number }>) => {
+      if (!state.currentBoard) return;
+
+      for (const column of state.currentBoard.columns) {
+        const task = column.tasks.find(t => t.id === action.payload.taskId);
+        if (task && task.images) {
+          task.images = task.images.filter(img => img.id !== action.payload.imageId);
+          return;
+        }
+      }
+    }
+
+    //Task images logic
+}});
 
 // Экспорт экшенов
 export const {
@@ -285,6 +317,11 @@ export const {
   // Синхронизация
   syncBoard,
   syncTask,
+
+  // Task images
+  addTaskImage,
+  deleteTaskImage
+
 } = boardSlice.actions;
 
 export default boardSlice.reducer;

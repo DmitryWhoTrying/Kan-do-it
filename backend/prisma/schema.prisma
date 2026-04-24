@@ -27,12 +27,31 @@ model Task{
   id          Int      @id @default(autoincrement()) 
   title       String   
   description String?
-  startDate   DateTime
+  startDate   DateTime @default(now())
   endDate     DateTime?
   tag         String
   Column      Column? @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    Int?
   order       Int
+  images      TaskImage[]
+}
+
+model TaskImage {
+  id          Int      @id @default(autoincrement())  
+  task        Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId      Int?
+
+  filename    String
+  storedName  String
+  mimetype    String
+  size        Int
+
+  url         String  
+  thumbnailUrl String?
+
+  order       Int @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model BoardUser{

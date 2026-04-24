@@ -1,6 +1,6 @@
 // frontend/src/services/board.service.ts
 import apiClient from './api';
-import { Board, BoardUser, Column, Task, User} from '../../../shared/types';
+import { Board, BoardUser, Column, Task, TaskImage, User} from '../../../shared/types';
 import { socketService } from '../socket/socket-service';
 
 // Тип для ответа API (единый формат)
@@ -263,8 +263,38 @@ export class BoardService {
     return response.data.data;
   }
 
-  
+  async uploadTaskImage(boardId: number, taskId: number, formData: FormData): Promise<TaskImage> {
+    const response = await apiClient.post<ApiResponse<TaskImage>>(
+        `${this.taskEndpoint}/${taskId}/images`, formData, {headers: {'Content-Type': 'multipart/form-data'}}
+    );
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to upload image');
+    }
+    return response.data.data;
+  }
 
+  async deleteTaskImage(boardId: number, taskId: number, imageId: number): Promise<boolean>{
+    const response = await apiClient.delete<ApiResponse<string>>(
+      `${this.taskEndpoint}/${taskId}/images/${imageId}`
+    );
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to delete task image');
+    }
+
+    return true;
+  }
+
+  async getTaskImages(boardId: number, taskId: number): Promise<TaskImage[]>{
+    const response = await apiClient.get<ApiResponse<TaskImage[]>>(
+      `/${this.taskEndpoint}/${taskId}/images`
+    );
+
+    if (!response.data.success || !response.data.data){
+      throw new Error(response.data.error || 'Failed to fetch task images');
+    }
+    return response.data.data;
+  }
 }
 
 // Экспорт singleton-инстанса

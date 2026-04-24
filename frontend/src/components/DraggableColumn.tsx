@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useCallback, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import { Column as ColumnType, Task as TaskType } from '../../../shared/types';
+import { Column as ColumnType, TaskImage, Task as TaskType } from '../../../shared/types';
 import Task from './Task';
 import { ItemTypes } from '../types/dnd-types';
 import {  updateColumn  } from '../store/boardSlice';
@@ -18,6 +18,8 @@ interface DraggableColumnProps {
   onAddTask?: (columnId: number, task: Omit<TaskType, 'id'>) => void; // ✅ Новый проп
   onDeleteColumn?: (columnId: number) => void;
   onDeleteTask?: (columnId: number, taskId: number) => void;
+  onAddTaskImage?: (taskId: number, formData: FormData) => void;
+  onDeleteTaskImage?: (taskId: number, imageId: number) => void;
 }
 
 interface DragItem {
@@ -38,7 +40,9 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   onUpdateTask,
   onAddTask,
   onDeleteColumn,
-  onDeleteTask
+  onDeleteTask,
+  onAddTaskImage,
+  onDeleteTaskImage
 }) => {
   const columnRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
@@ -216,6 +220,8 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
               onDeleteTask={onAddTask ? (colId, taskId) => {
                 onDeleteTask?.(colId, taskId);
               } : undefined}
+              onDeleteImage={onDeleteTaskImage}
+              onAddImage={onAddTaskImage}
             />
           ))}
 

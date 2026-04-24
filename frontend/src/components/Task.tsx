@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDrag } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
-import { Task as TaskType } from '../../../shared/types';
+import { TaskImage, Task as TaskType } from '../../../shared/types';
 import { ItemTypes } from '../types/dnd-types';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { TaskImageUpload } from './TaskImageUpload/TaskImageUpload';
 //import { setTask } from '../store/boardSlice';
 
 interface TaskProps {
@@ -12,6 +13,8 @@ interface TaskProps {
   boardId: number;
   onUpdateTask: (columnId: number, updatedTask: TaskType) => void;
   onDeleteTask?: (columnId: number, taskId: number) => void;
+  onDeleteImage?: (taskId: number, imageId: number) => void;
+  onAddImage?: (taskId: number, formData: FormData) => void;
 }
 
 const Task: React.FC<TaskProps> = ({ 
@@ -19,7 +22,9 @@ const Task: React.FC<TaskProps> = ({
   columnId, 
   boardId, 
   onUpdateTask,
-  onDeleteTask 
+  onDeleteTask,
+  onDeleteImage,
+  onAddImage
 }) => {
   const dispatch = useAppDispatch();
   const ref = useRef<HTMLDivElement>(null);
@@ -86,6 +91,20 @@ const Task: React.FC<TaskProps> = ({
     const updatedTask = { ...task, ...updates };
     onUpdateTask(columnId, updatedTask);
   };
+
+  const handleImageUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    await onAddImage?.(task.id, formData);
+  };
+
+  const handleImageDelete = async (imageId: number) => {
+    if (window.confirm('Удалить это изображение?')) {
+      await onDeleteImage?.(task.id, imageId);
+    }
+  };
+
 
   const opacity = isDragging ? 0.4 : 1;
 
@@ -159,81 +178,52 @@ const Task: React.FC<TaskProps> = ({
           <span className="task-tag">{task.tag}</span>
         )}
         </div>
+        {/*// После мета-информации задачи:*/}
+        {(task.images?.length || 0) > 0 && (
+          <div className="task-images">
+            {task.images?.map((img, idx) => (
+              <div key={img.id} className="task-image-item">
+                <img 
+                  src={img.thumbnailUrl || img.url} 
+                  alt={img.filename}
+                  className="task-image-thumb"
+                  onClick={() => window.open(img.url, '_blank')} // Открыть в полном размере
+                />
+                {/* Кнопка удаления (только для владельца/редактора) */}
+                {currentUser?.permission === 'owner' || currentUser?.permission === 'edit' ? (
+                  <button 
+                    className="btn-delete-image"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleImageDelete(img.id);
+                    }}
+                  >
+                    ✕
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Кнопка добавления изображения */}
+        {currentUser?.permission === 'owner' || currentUser?.permission === 'edit' && (
+          <TaskImageUpload
+            taskId={task.id}
+            boardId={boardId}
+            onImageAdded={(newImage) => {
+              // Обновляем локальный стейт задачи
+              onUpdateTask(columnId, {
+                ...task,
+                images: [...(task.images || []), newImage],
+              });
+            }}
+          />
+        )}
       </div>
       </div>
     </div>
   );
-
-  // return (
-  //   <div 
-  //     ref={drag}
-  //     className={`task ${isDragging ? 'dragging' : ''}`}
-  //     style={{ 
-  //       opacity: isDragging ? 0.3 : 1,
-  //       cursor: 'grab'
-  //     }}
-  //   >
-  //     {task.tag && (
-  //       <h3 className={`task-tag ${getTagClass(task.tag)}`}>
-  //         {task.tag}
-  //       </h3>
-  //     )}
-  //     {
-  //       (currentUser?.permission === 'owner' || currentUser?.permission === 'edit')
-  //     ?
-  //       <div className="task-content">
-  //       <h3 
-  //         className="task-name"
-  //         contentEditable
-  //         suppressContentEditableWarning
-  //         onBlur={(e) => handleTaskUpdate({ title: e.currentTarget.textContent || task.title })}
-  //       >
-  //         {task.title}
-  //       </h3>
-  //       <p 
-  //         contentEditable
-  //         suppressContentEditableWarning
-  //         onBlur={(e) => handleTaskUpdate({ description: e.currentTarget.textContent || task.description })}
-  //       >
-  //         {task.description}
-  //       </p>
-  //       <div className="task-time-div">
-  //         {task.startDate && (
-  //           <time className="task-start-date" dateTime={task.startDate}>
-  //             от {new Date(task.startDate).toLocaleDateString('ru-RU')}
-  //           </time>
-  //         )}
-  //         {task.endDate && (
-  //           <time className="task-end-date" dateTime={task.endDate}>
-  //             до {new Date(task.endDate).toLocaleDateString('ru-RU')}
-  //           </time>
-  //         )}
-  //       </div>
-  //     </div>
-  //     : 
-  //       <div className="task-content">
-  //       <h3 className="task-name">
-  //         {task.title}
-  //       </h3>
-  //       <p >
-  //         {task.description}
-  //       </p>
-  //       <div className="task-time-div">
-  //         {task.startDate && (
-  //           <time className="task-start-date" dateTime={task.startDate}>
-  //             от {new Date(task.startDate).toLocaleDateString('ru-RU')}
-  //           </time>
-  //         )}
-  //         {task.endDate && (
-  //           <time className="task-end-date" dateTime={task.endDate}>
-  //             до {new Date(task.endDate).toLocaleDateString('ru-RU')}
-  //           </time>
-  //         )}
-  //       </div>
-  //     </div>
-  //     }      
-  //   </div>
-  // );
 };
 
 export default Task;

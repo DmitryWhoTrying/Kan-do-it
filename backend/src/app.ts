@@ -31,6 +31,10 @@ import { PrismaTaskRepository } from './repositories/task-prisma-repository';
 import { TaskService } from './service/task-service';
 import { AuthController } from './controller/auth-controller';
 import { AuthService } from './service/auth-service';
+import { createTaskImageRoutes } from './routes/task-image-routes';
+import { TaskImageController } from './controller/task-image-controller';
+import path from 'path';
+
 dotenv.config();
 
 const app = express();
@@ -90,6 +94,8 @@ const prismaTaskRepo = new PrismaTaskRepository(prisma);
 const taskService = new TaskService(prismaTaskRepo);
 const taskController = new TaskController(taskService, socketEmitter);
 
+const taskImageController = new TaskImageController();
+
 console.log('Registering routes...');
 
 //app.use('/api/tasks', createTaskRoutes());
@@ -111,6 +117,8 @@ console.log('✓ Task routes registered');
 
 app.use('/api/auth', createAuthRoutes(authController));
 console.log('✓ Authentification routes registered')
+
+app.use('/api/images', createTaskImageRoutes(taskImageController))
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -139,6 +147,13 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
       : err.message 
   });
 });
+
+app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
+  maxAge: '1y', // Кэшировать на 1 год
+  setHeaders: (res, path) => {
+    res.setHeader('Access-Control-Allow-Origin', '*'); // Разрешить CORS для всех доменов
+  }
+}));
 
 // 404 handler (должен быть последним)
 app.use((req, res) => {

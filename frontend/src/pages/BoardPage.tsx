@@ -7,13 +7,13 @@ import {
   updateBoardName, removeTask, addTask, addColumn,
   updateColumnsOrder, updateTask as updateTaskAction,
   updateBoardFields, setCurrentUser, logout, updateColumn,
-  updateTask
+  updateTask, addTaskImage, deleteTaskImage
 } from '../store/boardSlice';
 import { BoardService, boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
-import { Board, BoardUser, Column, Column as ColumnType, Task } from '../../../shared/types';
+import { Board, BoardUser, Column, Column as ColumnType, Task, TaskImage } from '../../../shared/types';
 import { authService } from '../services/auth-service';
 import { SocketTest } from '../components/socket-test';
 import { current } from '@reduxjs/toolkit';
@@ -25,15 +25,14 @@ const BoardPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  //локалстейты пиздец надо
+  //локалстейты надо
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [boardUsers, setBoardUsers] = useState<BoardUser[]>([]);
 
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
 
-
-   const hasSubscribedRef = useRef(false);
+  const hasSubscribedRef = useRef(false);
   const lastBoardIdRef = useRef<string | null>(null);
 
 
@@ -177,13 +176,11 @@ useEffect(() => {
     return;
   }
 
-  // ✅ ГЛАВНОЕ ИСПРАВЛЕНИЕ: создаём задачу с ОБНОВЛЁННЫМ columnId
   const taskToMove = { 
     ...task, 
     columnId: targetColumnId  // ← Критически важно!
   };
 
-  // ✅ Строим обновлённый массив колонок
   const updatedColumns = currentBoard.columns.map(col => {
     // Удаляем задачу из исходной колонки (если это не та же колонка)
     if (col.id === sourceColumnId && sourceColumnId !== targetColumnId) {
@@ -288,6 +285,54 @@ useEffect(() => {
     }    
   };
 
+const handleAddTaskImage = useCallback(async (taskId: number, formData: FormData) => {
+  if (!currentBoard) return;
+
+  try {
+    // HTTP-запрос на загрузку
+    const newImage = await boardService.uploadTaskImage(currentBoard.id, taskId, formData);
+    
+    // Обновляем задачу в Redux: добавляем изображение в массив
+    dispatch(updateTask({ 
+      taskId, 
+      updates: { 
+        images: [...(currentBoard.columns.flatMap(col => col.tasks)
+          .find(t => t.id === taskId)?.images || []), newImage] 
+      } 
+    }));
+    
+    // Бэкенд сам уведомит остальных через сокет
+    
+  } catch (err: any) {
+    console.error('Failed to upload image:', err);
+    dispatch(setError(err.message || 'Не удалось загрузить изображение'));
+  }
+}, [currentBoard, dispatch]);
+
+  const handleDeleteTaskImage = useCallback(async (taskId: number, imageId: number) => {
+  if (!currentBoard) return;
+
+  try {
+    // HTTP-запрос на удаление
+    await boardService.deleteTaskImage(currentBoard.id, taskId, imageId);
+    
+    // Обновляем задачу в Redux: фильтруем массив изображений
+    dispatch(updateTask({
+      taskId,
+      updates: {
+        images: currentBoard.columns.flatMap(col => col.tasks)
+          .find(t => t.id === taskId)?.images
+          ?.filter(img => img.id !== imageId)
+      }
+    }));
+    
+  } catch (err: any) {
+    console.error('Failed to delete image:', err);
+    dispatch(setError(err.message || 'Не удалось удалить изображение'));
+  }
+}, [currentBoard, dispatch]);
+
+
   const handleDeleteColumn = useCallback(async (columnId: number) => {
     if (!currentBoard) return;
     if (!(currentUser?.permission === 'owner' || currentUser?.permission === 'edit')){
@@ -322,6 +367,8 @@ useEffect(() => {
     dispatch(logout());
     navigate('/login');
   };
+
+
 
   // === Рендеринг ===
   if (isLoading) return <div className="loading">Загрузка...</div>;
@@ -380,6 +427,8 @@ useEffect(() => {
                   onAddTask={handleAddTask}
                   onDeleteColumn={handleDeleteColumn}
                   onDeleteTask = {handleDeleteTask}
+                  onAddTaskImage={handleAddTaskImage}
+                  onDeleteTaskImage={handleDeleteTaskImage}
                 />
               ))}
             
