@@ -64,6 +64,21 @@ export class PrismaColumnRepository implements IColumnRepository{
                     endDate: task.endDate ? new Date(task.endDate) : null,
                     tag: task.tag ?? "",
                     order: task.order ?? 0,
+                    images: {create: task.images?.map(img => ({
+                        //id: img.id,
+                        //taskId: task.id,
+                        filename: img.filename,
+                        storedName: img.storedName,
+                        mimetype: img.mimetype,
+                        size: img.size,
+                        width: img.width,
+                        height: img.height,
+                        url: img.url,
+                        thumbnailUrl: img.thumbnailUrl,
+                        order: img.order, 
+                        createdAt:img.createdAt,
+                        updatedAt: img.updatedAt
+                    }))}
                 }))
             }
         }
@@ -85,7 +100,7 @@ export class PrismaColumnRepository implements IColumnRepository{
     async delete(columnID: number): Promise<boolean> {
         const prismaColumn = await this.prisma.column.delete({
             where:{id: columnID},
-            include: {tasks: true}
+            include: {tasks: {include: {images: true}}}
         })
 
         if (!prismaColumn)

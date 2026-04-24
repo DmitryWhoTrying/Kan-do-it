@@ -43,7 +43,7 @@ export class PrismaBoardRepository implements IBoardRepository{
                         include: {user: true}
                     },
                     columns:{
-                        include: {tasks: true},
+                        include: {tasks: {include: {images: true}}},
                         orderBy: {order: 'asc'}
                     }
                 }
@@ -72,7 +72,7 @@ export class PrismaBoardRepository implements IBoardRepository{
                         include: {user: true}
                     },
                     columns:{
-                        include: {tasks: true},
+                        include: {tasks: {include: {images: true}}},
                         orderBy: {order: 'asc'}
                     }
                 }
@@ -102,7 +102,7 @@ export class PrismaBoardRepository implements IBoardRepository{
                         include: {user: true}
                     },
                     columns:{
-                        include: {tasks: true},
+                        include: {tasks: {include: {images: true}}},
                         orderBy: {order: 'asc'}
                     }
                 }
@@ -172,6 +172,21 @@ export class PrismaBoardRepository implements IBoardRepository{
                                 endDate: task.endDate ? new Date(task.endDate) : null,
                                 tag: task.tag ?? "",
                                 order: task.order ?? 0,
+                                images: {create: task.images?.map(img => ({
+                                        //id: img.id,
+                                        filename: img.filename,
+                                        storedName: img.storedName,
+                                        mimetype: img.mimetype,
+                                        size: img.size,
+                                        width: img.width,
+                                        height: img.height,
+                                        url: img.url,
+                                        thumbnailUrl: img.thumbnailUrl,
+                                        order: img.order, 
+                                        createdAt:img.createdAt,
+                                        updatedAt: img.updatedAt
+                                        }))
+                                }
                             }))
                         }
                     }))
@@ -184,7 +199,7 @@ export class PrismaBoardRepository implements IBoardRepository{
                 include:{
                     users: {include: {user:true}},
                     columns:{
-                        include: {tasks: true},
+                        include: {tasks: {include: {images: true}}},
                         orderBy: {order: 'asc'},
                     }
                 }
@@ -218,7 +233,7 @@ export class PrismaBoardRepository implements IBoardRepository{
                         include: {user: true}
                     },
                     columns:{
-                        include: {tasks: true},
+                        include: {tasks: {include: {images: true}}},
                         orderBy: {order: 'asc'}
                     }
                 }

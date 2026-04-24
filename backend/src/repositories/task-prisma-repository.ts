@@ -2,6 +2,7 @@ import { Task } from "../../../shared/types";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { TaskMapper } from "../mappers/TaskMapper";
 import { ITaskRepository } from "./task-repository.interface";
+import { all } from "axios";
 
 
 export class PrismaTaskRepository implements ITaskRepository{
@@ -63,6 +64,26 @@ export class PrismaTaskRepository implements ITaskRepository{
             updateData.Column = { connect: { id: columnId } };
         }
 
+        if (data.images && Array.isArray(data.images) && data.images.length > 0) {
+            updateData.images = {
+                deleteMany: {}, 
+                create: data.images.map(img => ({
+                    //id: img.id,
+                    filename: img.filename,
+                    storedName: img.storedName,
+                    mimetype: img.mimetype,
+                    size: img.size,
+                    width: img.width,
+                    height: img.height,
+                    url: img.url,
+                    thumbnailUrl: img.thumbnailUrl,
+                    order: img.order, 
+                    createdAt:img.createdAt,
+                    updatedAt: img.updatedAt
+                }) )}
+        };
+        
+
         const prismaTask = await this.prisma.task.update({
             where: {id: taskID},
             data: updateData,
@@ -79,6 +100,8 @@ export class PrismaTaskRepository implements ITaskRepository{
 
         return new TaskMapper().toDomain(prismaTask);
     }
+
+    
     async delete(taskID: number): Promise<boolean> {
         const prismaTask = await this.prisma.task.delete({
             where: {id: taskID}
@@ -90,7 +113,7 @@ export class PrismaTaskRepository implements ITaskRepository{
         return true;
     }
     async findAll(): Promise<Task[]> {
-        const prismaTask = await this.prisma.task.findMany({})
+        const prismaTask = await this.prisma.task.findMany({include: {images: true}})
 
         if (!prismaTask)
             return [];

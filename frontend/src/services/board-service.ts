@@ -280,7 +280,7 @@ export class BoardService {
       `${this.taskEndpoint}/${taskId}/images/${imageId}`
     );
 
-    if (!response.data.success || !response.data.data){
+    if (!response.data.success){
       throw new Error(response.data.error || 'Failed to delete task image');
     }
 
