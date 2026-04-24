@@ -3,10 +3,15 @@ import { ImageService} from "src/service/image-service";
 import { prisma } from "src/lib/prisma";
 
 import { url } from "node:inspector";
+import { SocketEmitter } from "src/socket/socket-emitter";
+import { TaskMapper } from "src/mappers/TaskMapper";
 
-const imageService = new ImageService();
 
 export class TaskImageController {
+    constructor(
+        private imageService: ImageService, 
+        private socketEmitter: SocketEmitter) 
+        {}
 
     //POST /api/tasks/:taskId/images
     async upload(req: Request, res: Response) {
@@ -31,7 +36,7 @@ export class TaskImageController {
                 return res.status(400).json({ success: false, error: 'Файл не найден' });
             }
 
-            const processed = await imageService.processImage(file.path);
+            const processed = await this.imageService.processImage(file.path);
             const taskImage = await prisma.taskImage.create({
                 data: {
                     task: {connect: { id: taskId }},
@@ -48,6 +53,7 @@ export class TaskImageController {
             });
 
             res.status(200).json({ success: true, data: taskImage });
+            this.socketEmitter.emitTaskImageAdded(Number(req.params.boardId), taskId, new TaskMapper().mapImageToDomain(taskImage));
         }
         catch (error) {
             console.error('Upload error:', error);
@@ -60,6 +66,7 @@ export class TaskImageController {
         try {
             const taskId = Number(req.params.taskId);
             const imageId = Number(req.params.imageId);
+            const boardId = Number(req.params.boardId); // Предполагаем, что boardId передается в URL
 
             const taskImage = await prisma.taskImage.findUnique({
                 where: { id: imageId, taskId }
@@ -69,10 +76,11 @@ export class TaskImageController {
                 return res.status(404).json({ success: false, error: 'Image not found' });
             }
 
-            await imageService.deleteImage(taskImage.storedName);
+            await this.imageService.deleteImage(taskImage.storedName);
             await prisma.taskImage.delete({ where: { id: imageId } });
 
             res.status(200).json({ success: true, message: 'Image deleted successfully' });
+            this.socketEmitter.emitTaskImageDeleted(boardId, taskId, imageId);
         } catch (error) {
             console.error('Delete error:', error);
             res.status(500).json({ success: false, error: 'Failed to delete image' });

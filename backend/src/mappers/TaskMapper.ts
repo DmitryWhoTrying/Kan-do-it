@@ -21,7 +21,7 @@ export class TaskMapper implements IMapper<Task, PrismaTask>{
     return prismaTasks.map(task => this.toDomain(task));
   }
 
-  private mapImageToDomain(prismaImage: PrismaTaskImage): TaskImage {
+  mapImageToDomain(prismaImage: PrismaTaskImage): TaskImage {
     return {
       id: prismaImage.id,
       taskId: prismaImage.taskId ?? -1,

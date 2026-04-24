@@ -1,6 +1,7 @@
 import {Server} from 'socket.io';
 import { ClientToServerEvents, ServerToClientEvents } from '../../../shared/socket-events.types';
-import {Board, Column, Task} from '../../../shared/types';
+import {Board, Column, Task, TaskImage} from '../../../shared/types';
+//import { TaskImage } from '@prisma/client';
 
 type TypedIO = Server<ClientToServerEvents, ServerToClientEvents>;
 
@@ -46,6 +47,19 @@ export class SocketEmitter {
 
     emitTaskDeleted(boardId: number, taskId: number, columnId: number) {
         this.io.to(`board:${boardId}`).emit('task:deleted', {taskId, columnId, boardId});
+    }
+
+    // === Task Image Events ===    
+    emitTaskImageAdded(boardId: number, taskId: number, image: TaskImage) {
+        this.io.to(`board:${boardId}`).emit('task:image:added', {taskId, image});
+    }
+
+    emitTaskImageUpdated(boardId: number, taskId: number, imageId: number, image: TaskImage) {
+        this.io.to(`board:${boardId}`).emit('task:image:updated', {taskId, imageId, image});
+    }
+
+    emitTaskImageDeleted(boardId: number, taskId: number, imageId: number) {
+        this.io.to(`board:${boardId}`).emit('task:image:deleted', {taskId, imageId});
     }
 
     // === USER EVENTS ===

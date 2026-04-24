@@ -35,6 +35,7 @@ import { createTaskImageRoutes } from './routes/task-image-routes';
 import { TaskImageController } from './controller/task-image-controller';
 import path from 'path';
 import { upload } from './lib/upload-config';
+import { ImageService } from './service/image-service';
 
 dotenv.config();
 
@@ -95,7 +96,8 @@ const prismaTaskRepo = new PrismaTaskRepository(prisma);
 const taskService = new TaskService(prismaTaskRepo);
 const taskController = new TaskController(taskService, socketEmitter);
 
-const taskImageController = new TaskImageController();
+const taskImageService = new ImageService();
+const taskImageController = new TaskImageController(taskImageService, socketEmitter);
 
 console.log('Registering routes...');
 
