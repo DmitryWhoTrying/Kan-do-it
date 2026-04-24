@@ -15,7 +15,7 @@ import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
 import { Board, BoardUser, Column, Column as ColumnType, Permission, Permission as PermissionEnum, Task, TaskImage } from '../../../shared/types';
 import { authService } from '../services/auth-service';
-
+//import { SocketTest } from '../components/socket-test';
 import { current } from '@reduxjs/toolkit';
 
 export const ItemTypes = { TASK: 'task', COLUMN: 'column' };
@@ -35,6 +35,13 @@ const BoardPage: React.FC = () => {
   const hasSubscribedRef = useRef(false);
   const lastBoardIdRef = useRef<string | null>(null);
 
+  const currentBoardRef = useRef(currentBoard);
+  const currentUserRef = useRef(currentUser);
+
+  useEffect(() => {
+    currentBoardRef.current = currentBoard;
+    currentUserRef.current = currentUser; // ✅ Теперь работает
+  }, [currentBoard, currentUser]);
 
   const handleTaskUpdated = useCallback((payload: { task: Task }) => {
     dispatch(updateTaskAction({ 
@@ -76,26 +83,28 @@ const BoardPage: React.FC = () => {
   }, [dispatch]);
 
   const handleUserKicked = useCallback((userId: number) => {
-    if (currentUser?.userId === userId) {
+    if (currentUserRef.current?.userId === userId) {
       alert('Вы были исключены из доски владельцем!');
       navigate('/'); // Редирект на список досок
     }
   }, [navigate]);
 
   const handleUserRoleChanged = useCallback((userId: number, permission: BoardUser['permission']) => {
-    if (currentUser?.userId === userId) {
+    console.log('🎯 CUSTOM HANDLER: user:roleChanged', { userId, permission });
+
+    if (currentUserRef.current?.userId === userId) {
 
       alert(`Ваши права были изменены на: ${permission}`);
-      dispatch(setCurrentUser({ ...currentUser, permission }));
+      dispatch(setCurrentUser({ ...currentUserRef.current, permission }));
 
     }
-  }, [currentUser, dispatch]);
+  }, [dispatch]);
 
   const handleTaskImageAdded = useCallback((data:{taskId: number, image: TaskImage}) => {
     console.log('🎯 CUSTOM HANDLER: task:image:added', data);
 
     //check if such image already exists in the task to avoid duplicates (can happen if user has multiple tabs open)
-    const task = currentBoard?.columns.flatMap(col => col.tasks).find(t => t.id === data.taskId);
+    const task = currentBoardRef.current?.columns.flatMap(col => col.tasks).find(t => t.id === data.taskId);
     if (task?.images?.find(img => img.id === data.image.id)) {
       console.log('Image already exists in task, skipping update');
       return;
@@ -104,49 +113,59 @@ const BoardPage: React.FC = () => {
     dispatch(updateTask({
       taskId: data.taskId,
       updates: {
-        images: [...(currentBoard?.columns.flatMap(col => col.tasks).find(t => t.id === data.taskId)?.images || []), data.image]
+        images: [...(currentBoardRef.current?.columns.flatMap(col => col.tasks).find(t => t.id === data.taskId)?.images || []), data.image]
       }
     }));
-    console.log('Task image added in Redux');
-    }, [dispatch, currentBoard]);
+    }, [dispatch]);
 
   const handleTaskImageUpdated = useCallback((data:{taskId: number, imageId: number, image: TaskImage}) => {
     console.log('🎯 CUSTOM HANDLER: task:image:updated', data);
-    console.log('Currently not implemented, but the handler is ready to update task image in redux when the event will be emitted');
-  }, [dispatch, currentBoard]);
+    console.log('Current board state before image update:', currentBoardRef.current);
+  }, [dispatch]);
 
   const handleTaskImageDeleted = useCallback((data:{taskId: number, imageId: number}) => {
     console.log('🎯 CUSTOM HANDLER: task:image:deleted', data);
-
-    console.log('Task image deleted in Redux');
 
     dispatch(updateTask({
       taskId: data.taskId,
       updates: {
         images: 
-            currentBoard?.columns.flatMap(col => col.tasks).
+            currentBoardRef.current?.columns.flatMap(col => col.tasks).
               find(t => t.id === data.taskId)?.
               images?.filter(img => img.id !== data.imageId)
       }
     }));
-  }, [dispatch, currentBoard]);
+  }, [dispatch]);
 
   // === Загрузка доски
 
-  useEffect(() => {
-  if (!boardId || hasSubscribedRef.current) return;
-  hasSubscribedRef.current = true;
+ useEffect(() => {
+  if (!boardId) return;
+  
+  // Если уже подписаны на эту доску, не делаем ничего
+  if (lastBoardIdRef.current === boardId && hasSubscribedRef.current) {
+    console.log('Already subscribed to board:', boardId);
+    return;
+  }
 
-  const loadBoard = async () => {
+  const initBoard = async () => {
     try {
       dispatch(setLoading(true));
+      
+      // Загружаем доску
       const board = await boardService.getById(Number(boardId));
       dispatch(setBoard(board));
       
       const user = board.users?.find(u => u.userId === currentUser?.userId);
       if (user) dispatch(setCurrentUser(user));
       
+      // Подключаемся к комнате через сокет
       socketService.joinBoard(Number(boardId));
+      
+      // Устанавливаем флаги
+      hasSubscribedRef.current = true;
+      lastBoardIdRef.current = boardId;
+      
     } catch (err: any) {
       dispatch(setError(err.message || 'Failed to load board'));
     } finally {
@@ -154,33 +173,41 @@ const BoardPage: React.FC = () => {
     }
   };
 
-  loadBoard();
+  initBoard();
 
+  // Настраиваем подписки на сокеты
   const unsubscribes = [
-      socketService.onTaskUpdated(handleTaskUpdated),
-      socketService.onBoardUpdated(handleBoardUpdated),
-      socketService.onBoardDeleted(handleBoardDeleted),
-      socketService.onColumnCreated(handleColumnCreated),
-      socketService.onColumnUpdated(handleColumnUpdated),
-      socketService.onColumnDeleted(handleColumnDeleted),
-      socketService.onTaskCreated(handleTaskCreated),
-      socketService.onTaskDeleted(handleTaskDeleted),
-      socketService.onUserRoleChanged(handleUserRoleChanged),
-      socketService.onUserKicked(handleUserKicked),
-      socketService.onTaskImageAdded(handleTaskImageAdded),
-      socketService.onTaskImageUpdated(handleTaskImageUpdated),
-      socketService.onTaskImageDeleted(handleTaskImageDeleted)
-    ];
+    socketService.onTaskUpdated(handleTaskUpdated),
+    socketService.onBoardUpdated(handleBoardUpdated),
+    socketService.onBoardDeleted(handleBoardDeleted),
+    socketService.onColumnCreated(handleColumnCreated),
+    socketService.onColumnUpdated(handleColumnUpdated),
+    socketService.onColumnDeleted(handleColumnDeleted),
+    socketService.onTaskCreated(handleTaskCreated),
+    socketService.onTaskDeleted(handleTaskDeleted),
+    socketService.onUserRoleChanged(handleUserRoleChanged),
+    socketService.onUserKicked(handleUserKicked),
+    socketService.onTaskImageAdded(handleTaskImageAdded),
+    socketService.onTaskImageUpdated(handleTaskImageUpdated),
+    socketService.onTaskImageDeleted(handleTaskImageDeleted)
+  ];
 
-    return () => {
-      console.log('🧹 Cleanup called for board:', boardId);
-      // ✅ Сбрасываем флаг только если это та же доска
-      if (lastBoardIdRef.current === boardId) {
-        hasSubscribedRef.current = false;
-      }
-      unsubscribes.forEach(unsub => unsub?.());
-    };
-}, [boardId, dispatch, currentUser?.userId]); 
+  // Cleanup при размонтировании или смене boardId
+  return () => {
+    console.log('Cleaning up board:', boardId);
+    unsubscribes.forEach(unsub => unsub?.());
+    
+    // Сбрасываем флаги только при реальном уходе с доски
+    hasSubscribedRef.current = false;
+    lastBoardIdRef.current = null;
+  };
+}, [boardId, dispatch, 
+  handleTaskUpdated, handleBoardUpdated, handleBoardDeleted,
+  handleColumnCreated, handleColumnUpdated, handleColumnDeleted,
+  handleTaskCreated, handleTaskDeleted, handleUserRoleChanged,
+  handleUserKicked, handleTaskImageAdded, handleTaskImageUpdated,
+  handleTaskImageDeleted
+]);
 
 
 //загрузка boardusers
