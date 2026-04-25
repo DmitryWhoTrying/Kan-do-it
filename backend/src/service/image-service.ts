@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
+import { ITaskImageRepository } from 'src/repositories/task-image-repository.interface';
 
 export interface ProcessedImage {
     original: string; //путь к оригинальному изображению
@@ -14,9 +15,46 @@ export interface ProcessedImage {
 
 export class ImageService {
     private readonly baseUrl: string;
+    private repository: ITaskImageRepository;
 
-    constructor(baseUrl: string = process.env.BASE_UPLOADS_URL || 'http://localhost:3000/uploads') {
+    constructor(baseUrl: string = process.env.BASE_UPLOADS_URL || 'http://localhost:3000/uploads', imageRepository: ITaskImageRepository) {
+        console.log("called image service ctor, baseurl", baseUrl);
         this.baseUrl = baseUrl;
+        this.repository = imageRepository;
+    }
+
+    async create(taskId: number, file: Express.Multer.File){
+        const processed = await this.processImage(file.path);
+                    const taskImage = await this.repository.create({
+                        taskId,
+                        filename: file.originalname,
+                        storedName: file.filename,
+                        mimetype: file.mimetype,
+                        size: file.size,
+                        width: processed.width,
+                        height: processed.height,
+                        url: processed.url,
+                        thumbnailUrl: processed.thumbnailUrl,
+                        order: (await this.repository.countByTaskId(taskId)),
+                    // Порядок - количество уже существующих изображений для этой задачи
+                    });
+
+        return taskImage;
+    }
+
+    async find(imageId: number){
+        return this.repository.find(imageId);
+    }
+
+    async delete(imageId : number){
+        const taskImage = await this.repository.find(imageId);
+
+        if (taskImage)
+
+        await this.deleteImage(taskImage.storedName);
+        const res = await this.repository.delete(imageId);
+        if (res)
+            console.log('deleted successfule', imageId);
     }
 
     async processImage(filePath: string): Promise<ProcessedImage> {

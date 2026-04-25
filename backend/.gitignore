@@ -1,9 +1,11 @@
 node_modules
 node_modules/*
-/node_modules
+
+backend/node_modules
+uploads
+package-lock.json
 # Keep environment variables out of version control
 .env
 
 /generated/prisma
 
-/generated/prisma

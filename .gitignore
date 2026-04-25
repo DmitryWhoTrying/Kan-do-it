@@ -1778,3 +1778,16 @@ backend/uploads/tasks/thumb_5ec0c67f-afac-438f-8bfe-6747a6e4236f.png
 backend/uploads/tasks/thumb_8aa31202-a655-405d-8945-32aec9689b33.jpg
 backend/uploads/tasks/thumb_c9387b16-0559-41fd-8179-8b2c107159c6.png
 backend/node_modules/@prisma/client/package.json
+backend/node_modules/@prisma/client/package.json
+backend/node_modules/@prisma/client/generator-build/index.js
+backend/node_modules/@prisma/client/runtime/client.d.mts
+backend/node_modules/@prisma/client/runtime/client.d.ts
+backend/node_modules/@prisma/client/runtime/client.js
+backend/node_modules/@prisma/client/runtime/client.js.map
+backend/node_modules/@prisma/client/runtime/client.mjs
+backend/node_modules/@prisma/client/runtime/client.mjs.map
+backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.js
+backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.js.map
+backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs
+backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs.map
+backend/node_modules/@prisma/client/scripts/default-index.js

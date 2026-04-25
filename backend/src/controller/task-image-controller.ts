@@ -35,24 +35,13 @@ export class TaskImageController {
                 return res.status(400).json({ success: false, error: 'Файл не найден' });
             }
 
-            const processed = await this.imageService.processImage(file.path);
-            const taskImage = await prisma.taskImage.create({
-                data: {
-                    task: {connect: { id: taskId }},
-                    filename: file.originalname,
-                    storedName: file.filename,
-                    mimetype: file.mimetype,
-                    size: file.size,
-                    width: processed.width,
-                    height: processed.height,
-                    url: processed.url,
-                    thumbnailUrl: processed.thumbnailUrl,
-                    order: await prisma.taskImage.count({ where: {task: {is:{id:  taskId }} }}) // Порядок - количество уже существующих изображений для этой задачи
-                }
-            });
+            const createdImage = await this.imageService.create(taskId, file);
 
-            res.status(200).json({ success: true, data: taskImage });
-            this.socketEmitter.emitTaskImageAdded(Number(req.params.boardId), taskId, new TaskMapper().mapImageToDomain(taskImage));
+            if (!createdImage)
+                throw new Error('failed to create image');
+
+            res.status(200).json({ success: true, data: createdImage });
+            this.socketEmitter.emitTaskImageAdded(Number(req.params.boardId), taskId, createdImage);
         }
         catch (error) {
             console.error('Upload error:', error);
@@ -67,16 +56,13 @@ export class TaskImageController {
             const imageId = Number(req.params.imageId);
             const boardId = Number(req.params.boardId); // Предполагаем, что boardId передается в URL
 
-            const taskImage = await prisma.taskImage.findUnique({
-                where: { id: imageId, taskId }
-            });
+            const taskImage = await this.imageService.find(imageId);
 
             if (!taskImage) {
                 return res.status(404).json({ success: false, error: 'Image not found' });
             }
 
-            await this.imageService.deleteImage(taskImage.storedName);
-            await prisma.taskImage.delete({ where: { id: imageId } });
+            await this.imageService.delete(imageId);
 
             res.status(200).json({ success: true, message: 'Image deleted successfully' });
             this.socketEmitter.emitTaskImageDeleted(boardId, taskId, imageId);
