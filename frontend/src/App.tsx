@@ -1,13 +1,12 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { store, AppDispatch, RootState } from './store';
-import { setCurrentUser, setAuthToken, logout, clearBoard } from './store/boardSlice';
+import { AppDispatch, RootState } from './store';
+import { setCurrentUser, setAuthToken, logout} from './store/boardSlice';
 import { authService } from './services/auth-service';
 import { socketService } from '../src/socket/socket-service';
-import apiClient from './services/api';
 
 // Страницы
 import LoginPage from './pages/LoginPage';

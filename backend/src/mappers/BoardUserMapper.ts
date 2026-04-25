@@ -1,8 +1,6 @@
 import {Board as PrismaBoard, Permission as PrismaPermission, BoardUser as PrismaBoardUser, User as PrismaUser} from "@prisma/client"
-import {BoardUser, User, Board} from "../../../shared/types"
+import {BoardUser} from "../../../shared/types"
 import { IMapper } from "./Mapper.interface"
-import { BoardMapper } from "./BoardMapper";
-import { UserMapper } from "./UserMapper";
 
 type BoardUserWithUser = PrismaBoardUser & { user: PrismaUser };
 

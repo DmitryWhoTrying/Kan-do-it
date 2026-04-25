@@ -18,15 +18,15 @@ export interface ClientToServerEvents{
     //пока хз надо ли
     //'user:role:changed': (userId: number, permision: Permission) => void;
 
-    //события колонки
-    'column:create': (data:{boardId: number, column: Column}) => void;
-    'column:update': (data: {columnId: number, data: Partial<Column>, boardId: number}) => void;
-    'column:delete': (data:{columnId: number, boardId: number}) => void;
+    //события колонки (отказались в пользу оптимистичных обновлений)
+    // 'column:create': (data:{boardId: number, column: Column}) => void;
+    // 'column:update': (data: {columnId: number, data: Partial<Column>, boardId: number}) => void;
+    // 'column:delete': (data:{columnId: number, boardId: number}) => void;
 
-    //события задачи
-    'task:create': (data: {task:Task, columnId: number, boardId: number}) => void;
-    'task:update': (data: {taskId: number, columnId: number, boardId:number, task: Partial<Task>}) => void;
-    'task:delete': (data:{taskId: number, columnId: number, boardId: number}) => void;
+    // //события задачи
+    // 'task:create': (data: {task:Task, columnId: number, boardId: number}) => void;
+    // 'task:update': (data: {taskId: number, columnId: number, boardId:number, task: Partial<Task>}) => void;
+    // 'task:delete': (data:{taskId: number, columnId: number, boardId: number}) => void;
 }
 
 export interface ServerToClientEvents{
@@ -59,16 +59,16 @@ export interface ServerToClientEvents{
     'task:image:deleted': (data:{taskId: number, imageId: number}) => void;
 
     //ответы об успехе операции (опционально можно ловить, отказались в ходе разработки)
-    'board:update:success': (board: Board) => void;
-    'board:delete:success': ( boardId: number) => void;
+    // 'board:update:success': (board: Board) => void;
+    // 'board:delete:success': ( boardId: number) => void;
 
-    'column:create:success': (column: Column) => void;
-    'column:update:success': (column: Column) => void;
-    'column:delete:success': (columnId: number) => void;
+    // 'column:create:success': (column: Column) => void;
+    // 'column:update:success': (column: Column) => void;
+    // 'column:delete:success': (columnId: number) => void;
 
-    'task:create:success': (task: Task) => void;
-    'task:update:success': (task: Task) => void;
-    'task:delete:success': ( taskId: number ) => void;
+    // 'task:create:success': (task: Task) => void;
+    // 'task:update:success': (task: Task) => void;
+    // 'task:delete:success': ( taskId: number ) => void;
 
     //ответ об ошибке выполнения операции
     'error': (message: string) => void;

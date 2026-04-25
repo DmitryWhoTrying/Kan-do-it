@@ -1,6 +1,5 @@
 import {Request, Response} from 'express';
 import {BoardService} from '../service/board-service'
-import { ClientToServerEvents, ServerToClientEvents } from '../../../shared/socket-events.types';
 import { SocketEmitter } from 'src/socket/socket-emitter';
 
 export class BoardController{

@@ -3,20 +3,18 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { 
-  setBoard, clearBoard, removeColumn, setLoading, setError,
+  setBoard, removeColumn, setLoading, setError,
   updateBoardName, removeTask, addTask, addColumn,
   updateColumnsOrder, updateTask as updateTaskAction,
   updateBoardFields, setCurrentUser, logout, updateColumn,
-  updateTask, addTaskImage, deleteTaskImage
+  updateTask, 
 } from '../store/boardSlice';
-import { BoardService, boardService } from '../services/board-service';
+import { boardService } from '../services/board-service';
 import { socketService } from '../socket/socket-service';
 import Sidebar from '../components/Sidebar';
 import DraggableColumn from '../components/DraggableColumn';
-import { Board, BoardUser, Column, Column as ColumnType, Permission, Permission as PermissionEnum, Task, TaskImage } from '../../../shared/types';
+import { Board, BoardUser, Column, Column as ColumnType, Permission as PermissionEnum, Task, TaskImage } from '../../../shared/types';
 import { authService } from '../services/auth-service';
-//import { SocketTest } from '../components/socket-test';
-import { current } from '@reduxjs/toolkit';
 
 export const ItemTypes = { TASK: 'task', COLUMN: 'column' };
 

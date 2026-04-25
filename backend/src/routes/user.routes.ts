@@ -1,8 +1,5 @@
 import { Router } from 'express';
 import { UserController } from '../controller/user-controller';
-import { UserService } from './../service/user-service';
-import { UserPrismaRepository } from './../repositories/user-prisma-repository';
-import { prisma } from '../lib/prisma';
 
 export function createUserRoutes(userController: UserController): Router{
     const router = Router();

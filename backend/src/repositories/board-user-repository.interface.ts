@@ -1,5 +1,4 @@
-import {BoardUser, User, Board} from "../../../shared/types"
-import {Permission} from '@prisma/client'
+import {BoardUser} from "../../../shared/types"
 
 export interface IboardUserRepository
 {    

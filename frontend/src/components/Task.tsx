@@ -15,8 +15,6 @@ interface TaskProps {
   onDeleteTask?: (columnId: number, taskId: number) => void;
   onDeleteImage?: (taskId: number, imageId: number) => void;
   onAddImage?: (taskId: number, formData: FormData) => void;
-  //index: number,
-  //onMoveTask: (taskId: number, sourceColumnId: number, targetColumnId: number, targetIndex: number) => void;
 }
 
 const Task: React.FC<TaskProps> = ({ 
@@ -27,8 +25,6 @@ const Task: React.FC<TaskProps> = ({
   onDeleteTask,
   onDeleteImage,
   onAddImage,
-  //index,
-  //onMoveTask
 }) => {
   const dispatch = useAppDispatch();
   const ref = useRef<HTMLDivElement>(null);
@@ -38,76 +34,6 @@ const Task: React.FC<TaskProps> = ({
   const currentUser = useAppSelector(state => state.board.currentUser);
   const [editTitle, setEditTitle] = useState(task.title);
   const [isEditing, setIsEditing] = useState(false);
-
-  // const [{ isDragging }, drag, preview] = useDrag(() => ({
-  //   type: ItemTypes.TASK,
-  //   canDrag: currentUser?.permission !== 'view-only',
-  //   item: { 
-  //     id: task.id, 
-  //     columnId: columnId,
-  //     type: ItemTypes.TASK,
-  //     task: task 
-  //   },
-  //   collect: (monitor) => ({
-  //     isDragging: monitor.isDragging(),
-  //   }),
-
-  //   // Добавляем логирование для отладки
-  //   end: (item, monitor) => {
-  //     const dropResult = monitor.getDropResult();
-  //     console.log('Drag ended:', { item, dropResult });
-  //   },
-
-  // }), [task.id, columnId]);
-
-  // const [, drop] = useDrop({
-  //   accept: ItemTypes.TASK,
-  //   hover: (draggedItem: { id: number; columnId: number; index: number }, monitor) => {
-  //     if (!ref.current) return;
-  //     if (draggedItem.id === task.id) return;
-
-  //     // Определяем позицию для вставки
-  //     const hoverBoundingRect = ref.current.getBoundingClientRect();
-  //     const hoverMiddleY = (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
-  //     const clientOffset = monitor.getClientOffset();
-  //     if (!clientOffset) return;
-  //     const hoverClientY = clientOffset.y - hoverBoundingRect.top;
-
-  //     let newHoverIndex = index;
-  //     if (draggedItem.columnId === columnId) {
-  //       if (draggedItem.index < index && hoverClientY < hoverMiddleY) return;
-  //       if (draggedItem.index > index && hoverClientY > hoverMiddleY) return;
-  //       newHoverIndex = draggedItem.index < index ? index : index + 1;
-  //     } else {
-  //       newHoverIndex = hoverClientY < hoverMiddleY ? index : index + 1;
-  //     }
-
-  //     // ✅ Только обновляем визуальный индикатор, НЕ вызываем moveTask
-  //     setHoverIndex(newHoverIndex);
-      
-  //     // ✅ Дебаунс для реального перемещения
-  //     if (hoverTimeoutRef.current) {
-  //       clearTimeout(hoverTimeoutRef.current);
-  //     }
-  //   },
-  //   drop:(draggedItem) => {
-  //     // ✅ Реальное перемещение происходит ТОЛЬКО при отпускании
-  //     if (hoverIndex !== null) {
-  //       onMoveTask(
-  //         draggedItem.id, 
-  //         draggedItem.columnId, 
-  //         columnId, 
-  //         hoverIndex
-  //       );
-  //     }
-  //     setHoverIndex(null);
-  //     if (hoverTimeoutRef.current) {
-  //       clearTimeout(hoverTimeoutRef.current);
-  //     }
-  //   }
-  // });
-
-  // drag(drop(ref));
 
   // Форматирование даты
   const formatDate = (dateString: string | null) => {
@@ -130,11 +56,6 @@ const Task: React.FC<TaskProps> = ({
       onDeleteTask?.(columnId, task.id);
     }
   }
-
-  // // Скрываем стандартный призрак
-  // useEffect(() => {
-  //   preview(getEmptyImage(), { captureDraggingState: true });
-  // }, [preview]);
 
   const getTagClass = (tag?: string) => {
     if (tag === 'Без срока') return 'no-deadline';
@@ -161,14 +82,11 @@ const Task: React.FC<TaskProps> = ({
   };
 
 
-  // const opacity = isDragging ? 0.4 : 1;
-
   return (
     <div
       ref={ref}
       className={`task ${currentUser?.permission === 'view-only' ? 'task--read-only' : ''} ${isOverdue ? 'task--overdue' : ''}`}
-      //onDragStart={(e) => {e.stopPropagation()}}
-      //style={{ opacity }}
+
     >
       {/* Заголовок задачи */}
       <div className="task-content">

@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { ImageService} from "src/service/image-service";
 import { prisma } from "src/lib/prisma";
 
-import { url } from "node:inspector";
 import { SocketEmitter } from "src/socket/socket-emitter";
 import { TaskMapper } from "src/mappers/TaskMapper";
 

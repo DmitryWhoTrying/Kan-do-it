@@ -1,8 +1,5 @@
 import { Router } from "express";
 import { BoardUserController } from "../controller/board-user-controller";
-import { BoardUserService } from "./../service/board-user-service";
-import { PrimaBoardUserRepository } from "./../repositories/board-user-prisma-repository";
-import {prisma} from '../lib/prisma';
 
 export function createBoardUserRoutes(boardUserController : BoardUserController): Router{
     const router = Router();

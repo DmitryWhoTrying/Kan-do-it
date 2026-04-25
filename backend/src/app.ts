@@ -34,7 +34,6 @@ import { AuthService } from './service/auth-service';
 import { createTaskImageRoutes } from './routes/task-image-routes';
 import { TaskImageController } from './controller/task-image-controller';
 import path from 'path';
-import { upload } from './lib/upload-config';
 import { ImageService } from './service/image-service';
 
 dotenv.config();
@@ -101,7 +100,6 @@ const taskImageController = new TaskImageController(taskImageService, socketEmit
 
 console.log('Registering routes...');
 
-//app.use('/api/tasks', createTaskRoutes());
 // Регистрация HTTP-роутов
 app.use('/api/boards', createBoardRoutes(boardController));
 console.log('✓ Boards routes registered');
@@ -161,16 +159,18 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads/tasks'), {
   }
 }));
 
-app.post('/debug-upload', upload.single('image'), (req, res) => {
-  console.log('🧪 Debug route:', {
-    hasFile: !!req.file,
-    file: req.file,
-    body: req.body
-  });
-  res.json({ success: true, file: req.file });
-});
 
-// 404 handler (должен быть последним)
+//отладочный маршрут
+// app.post('/debug-upload', upload.single('image'), (req, res) => {
+//   console.log('🧪 Debug route:', {
+//     hasFile: !!req.file,
+//     file: req.file,
+//     body: req.body
+//   });
+//   res.json({ success: true, file: req.file });
+// });
+
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ success: false, error: 'Route not found' });
 });
@@ -203,7 +203,7 @@ process.on('SIGINT', async () => {
   });
 });
 
-// Обработка необработанных ошибок
+// Обработка не пойманных ошибок
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });

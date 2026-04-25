@@ -1,7 +1,6 @@
 // frontend/src/store/slices/boardSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Board, BoardUser, Column, Task, TaskImage } from '../../../shared/types';
-import { act } from 'react';
 
 interface BoardState {
   currentBoard: Board | null;      

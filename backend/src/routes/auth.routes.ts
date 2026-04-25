@@ -1,8 +1,6 @@
 import {Router} from 'express';
 import { AuthController } from 'src/controller/auth-controller';
-import { AuthService } from 'src/service/auth-service';
-import { UserPrismaRepository } from 'src/repositories/user-prisma-repository';
-import {prisma} from '../lib/prisma'
+
 
 export function createAuthRoutes(authController: AuthController):Router{
     const router = Router();

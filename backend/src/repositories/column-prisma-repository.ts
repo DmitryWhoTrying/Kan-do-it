@@ -65,8 +65,6 @@ export class PrismaColumnRepository implements IColumnRepository{
                     tag: task.tag ?? "",
                     order: task.order ?? 0,
                     images: {create: task.images?.map(img => ({
-                        //id: img.id,
-                        //taskId: task.id,
                         filename: img.filename,
                         storedName: img.storedName,
                         mimetype: img.mimetype,

@@ -1,8 +1,6 @@
-import { PrismaClient, Permission, Prisma } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 import { IboardUserRepository } from "./board-user-repository.interface";
-import { Board, BoardUser, User } from "../../../shared/types";
-//import { BoardMapper } from '../mappers/BoardMapper';
-import { PureComponent } from 'react';
+import { BoardUser} from "../../../shared/types";
 import { BoardUserMapper } from '../mappers/BoardUserMapper';
 
 

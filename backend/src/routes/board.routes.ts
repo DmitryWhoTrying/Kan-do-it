@@ -1,8 +1,5 @@
 import { Router } from 'express';
 import { BoardController } from '../controller/board-controller';
-import { BoardService } from './../service/board-service';
-import { PrismaBoardRepository } from './../repositories/board-prisma-repository';
-import { prisma } from '../lib/prisma';
 
 export function createBoardRoutes(boardController: BoardController): Router {
   const router = Router();

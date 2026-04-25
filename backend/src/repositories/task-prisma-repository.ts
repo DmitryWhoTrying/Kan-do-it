@@ -2,8 +2,6 @@ import { Task } from "../../../shared/types";
 import { Prisma, PrismaClient } from "@prisma/client";
 import { TaskMapper } from "../mappers/TaskMapper";
 import { ITaskRepository } from "./task-repository.interface";
-import { all } from "axios";
-
 
 export class PrismaTaskRepository implements ITaskRepository{
     constructor(private prisma: PrismaClient){}
@@ -68,7 +66,6 @@ export class PrismaTaskRepository implements ITaskRepository{
             updateData.images = {
                 deleteMany: {}, 
                 create: data.images.map(img => ({
-                    //id: img.id,
                     filename: img.filename,
                     storedName: img.storedName,
                     mimetype: img.mimetype,

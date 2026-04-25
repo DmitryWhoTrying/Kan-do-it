@@ -1,5 +1,5 @@
 import 'tsconfig-paths/register'; 
-import {Prisma, Column as PrismaColumn} from "@prisma/client"
+import {Column as PrismaColumn} from "@prisma/client"
 import {Column} from '../../../shared/types'
 import { TaskMapper } from "./TaskMapper";
 import { IMapper } from "./Mapper.interface";

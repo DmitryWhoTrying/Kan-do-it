@@ -8,18 +8,14 @@ import { BoardSocketController } from "./board-socket-controller";
 // Импорт нового эмиттера
 import { SocketEmitter } from "./socket-emitter";
 
-import { prisma } from '../lib/prisma';
-
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 type TypedIO = Server<ClientToServerEvents, ServerToClientEvents>;
 
 export function registerSocketHandlers(io: TypedIO) {
     
-    // Создаем SocketEmitter (синглтон для всего приложения)
+    // Создаем синглтон SocketEmitter
     const socketEmitter = new SocketEmitter(io);
 
-    // В новой архитектуре они больше НЕ нуждаются в сервисах (нет бизнес-логики).
-    // Им нужен только io (или socketEmitter), если нужно уведомлять о системных событиях.
     const boardSocketController = new BoardSocketController(socketEmitter);
 
     // Регистрируем обработчики подключений
@@ -38,14 +34,7 @@ export function registerSocketHandlers(io: TypedIO) {
             boardSocketController.handleLeave(socket, boardId);
         });
 
-        // УДАЛЕНО: socket.on('board:update', ...)
-        // УДАЛЕНО: socket.on('board:delete', ...)
-        // Обновления теперь идут только через HTTP POST/PUT/DELETE
-
-        // === COLUMN & TASK EVENTS ===
-        
-        // УДАЛЕНО: Все обработчики create, update, delete для колонок и задач
-        // Фронтенд больше не отправляет эти события через сокет.
+        // Обновления идут только через HTTP POST/PUT/DELETE
 
         // === SYSTEM EVENTS ===
         

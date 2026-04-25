@@ -19,16 +19,16 @@ export class AuthService{
 
     const cleanUsername = username.trim();
 
-    // 1. Пробуем найти существующего пользователя
+    // Пробуем найти существующего пользователя
     let user = await this.userRepository.findByName(cleanUsername);
 
-    // 2. Если не найден — создаём нового (авто-регистрация)
+    // Если не найден — создаём нового (авто-регистрация)
     if (!user) {
       user = await this.userRepository.create({name: cleanUsername});
     }
 
-    // 3. Генерируем "токен" (для учебного проекта — просто строка)
-    // В реальном проекте здесь был бы JWT
+    // Генерируем "токен" 
+    // В реальном проекте здесь должен быть JWT
     const token = `demo_token_${user.id}_${Date.now()}`;
 
     return {

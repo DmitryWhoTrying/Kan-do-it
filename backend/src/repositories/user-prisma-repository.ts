@@ -1,4 +1,3 @@
-import { use } from "react";
 import { User } from "../../../shared/types";
 import { PrismaClient } from "@prisma/client";
 import { UserMapper } from "../mappers/UserMapper";

@@ -149,8 +149,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       setNewUserPermission('view-only');
       setIsAddingUser(false);
 
-      // Уведомляем через сокет
-      //socketService.emitUserAdded?.(boardId, addedUser);
 
     } catch (err: any) {
       console.error('Failed to add user:', err);

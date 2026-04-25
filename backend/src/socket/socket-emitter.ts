@@ -1,7 +1,6 @@
 import {Server} from 'socket.io';
 import { ClientToServerEvents, ServerToClientEvents } from '../../../shared/socket-events.types';
 import {Board, Column, Task, TaskImage} from '../../../shared/types';
-//import { TaskImage } from '@prisma/client';
 
 type TypedIO = Server<ClientToServerEvents, ServerToClientEvents>;
 

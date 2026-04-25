@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
-import { setCurrentUser, setAuthToken, clearBoard } from '../store/boardSlice';
+import { setCurrentUser, setAuthToken} from '../store/boardSlice';
 import { authService } from '../services/auth-service';
 import { socketService } from '../socket/socket-service';
 
@@ -106,7 +106,6 @@ const LoginPage: React.FC = () => {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              // 🔸 В учебном режиме можно сделать необязательным
               required={false}
               disabled={isLoading}
             />

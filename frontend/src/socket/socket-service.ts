@@ -1,8 +1,7 @@
 //import { disconnect } from "node:cluster"; пока не очень надо
 import { ClientToServerEvents, ServerToClientEvents as ServerToClientEvents } from "../../../shared/socket-events.types";
 import { io, Socket } from "socket.io-client";
-import { Board, BoardUser, Column, Permission, Task, TaskImage, User } from "../../../shared/types";
-import { useCallback } from "react";
+import { Board, BoardUser, Column, Task, TaskImage} from "../../../shared/types";
 
 class SocketService {
     public socket: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -31,18 +30,18 @@ class SocketService {
 
         this.socket.on('disconnect', (reason) => {
             console.warn('Socket disconnected:', reason);
-            //alert('Потеряно соединение c сокетом! Bo избежание рассинхронизации перезагрузите страницу');
         });
 
         this.socket.on('connect_error', (err) => {
             console.error('connection error:', err.message);
         });
 
-        this.socket.onAny((event, arg) => {
-            //console.log(`📥 [SOCKET IN] ${event}`, arg);
-            console.log(`📥 [RAW] Event: "${event}", Args:`, arg);
 
-        });
+        //лог для отладки
+        // this.socket.onAny((event, arg) => {
+        //     console.log(`[RAW] Event: "${event}", Args:`, arg);
+
+        // });
     }
 
     disconnect(){
@@ -60,11 +59,11 @@ class SocketService {
     //board
     joinBoard(boardId: number){
         if (!this.socket?.connected) {
-                console.warn('⚠️ Cannot join room: socket not connected');
+                console.warn('Cannot join room: socket not connected');
                 return;
         }
 
-        console.log(`🔑 Joining room: board:${boardId}`);
+        console.log(`Joining room: board:${boardId}`);
         this.socket?.emit('board:join', boardId);
     }
 
@@ -181,9 +180,9 @@ class SocketService {
       // Отписка от событий
   off(event: any, callback?: (...args: any[]) => void): void {
     if (callback) {
-      this.socket?.off(event, callback); // ✅ Отписываем конкретный колбэк
+      this.socket?.off(event, callback); //Отписываем конкретный колбэк
     } else {
-      this.socket?.off(event); // ⚠️ Отписываем ВСЕ колбэки для события
+      this.socket?.off(event); // Отписываем ВСЕ колбэки
     }
   }
 }

@@ -1,7 +1,5 @@
 import {Socket, Server} from 'socket.io';
-import { BoardService} from '../service/board-service';
 import { ClientToServerEvents, ServerToClientEvents } from '../../../shared/socket-events.types';
-import { Board } from '../../../shared/types';
 import { SocketEmitter } from './socket-emitter';
 
 type TypedSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
@@ -16,11 +14,9 @@ export class BoardSocketController{
             return socket.emit('error', 'Unauthorized');
         }
 
-        console.log('Handling user socket join');
-        socket.join(`board:${boardId}`);
-        //console.log(`User ${userId} joined board ${boardId}`);
-        console.log(`✅ User ${userId} joined board:${boardId}`);
-        
+        //консольное сообщение для отладки
+        //console.log('Handling user socket join');
+        socket.join(`board:${boardId}`);      
     };
 
     handleLeave = (socket: TypedSocket, boardId: number) => {
