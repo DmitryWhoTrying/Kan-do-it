@@ -1709,3 +1709,21 @@ footer div {
   max-height: 90vh;
   border-radius: 8px;
 }
+
+.drop-indicator {
+  height: 3px;
+  background-color: #3b82f6;
+  margin: 4px 0;
+  border-radius: 2px;
+  transition: all 0.2s ease;
+}
+
+.drop-indicator--above {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.drop-indicator--below {
+  margin-top: 8px;
+  margin-bottom: 0;
+}

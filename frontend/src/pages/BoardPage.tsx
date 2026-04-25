@@ -30,6 +30,9 @@ const BoardPage: React.FC = () => {
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [boardUsers, setBoardUsers] = useState<BoardUser[]>([]);
 
+  const moveTaskTimeoutRef = useRef<NodeJS.Timeout>();
+const lastMoveTaskRef = useRef<{ taskId: number; targetIndex: number } | null>(null);
+
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
 
   const hasSubscribedRef = useRef(false);
@@ -254,55 +257,97 @@ useEffect(() => {
     }
   }, [currentBoard, newColumnTitle, dispatch]);
 
-  const moveTask = useCallback(async (taskId: number, sourceColumnId: number, targetColumnId: number) => {
+const moveTask = useCallback(async (
+  taskId: number,
+  sourceColumnId: number,
+  targetColumnId: number,
+  targetIndex: number
+) => {
   if (!currentBoard) return;
-
-  const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
-  const task = sourceColumn?.tasks.find(tsk => tsk.id === taskId);
-  if (!task) {
-    console.error('Task not found:', { taskId, sourceColumnId });
+  
+  // ✅ Проверка на дубликаты вызовов
+  if (lastMoveTaskRef.current?.taskId === taskId && 
+      lastMoveTaskRef.current?.targetIndex === targetIndex) {
+    console.log('Duplicate moveTask call, skipping');
     return;
   }
-
-  const taskToMove = { 
-    ...task, 
-    columnId: targetColumnId  // ← Критически важно!
-  };
-
-  const updatedColumns = currentBoard.columns.map(col => {
-    // Удаляем задачу из исходной колонки (если это не та же колонка)
-    if (col.id === sourceColumnId && sourceColumnId !== targetColumnId) {
-      return {
-        ...col,
-        tasks: col.tasks
-          .filter(t => t.id !== taskId)
-          .map((t, idx) => ({ ...t, order: idx }))
-      };
-    }
+  
+  lastMoveTaskRef.current = { taskId, targetIndex };
+  
+  // ✅ Debounce для предотвращения множественных вызовов
+  if (moveTaskTimeoutRef.current) {
+    clearTimeout(moveTaskTimeoutRef.current);
+  }
+  
+  moveTaskTimeoutRef.current = setTimeout(() => {
+    const sourceColumn = currentBoard.columns.find(col => col.id === sourceColumnId);
+    const task = sourceColumn?.tasks.find(tsk => tsk.id === taskId);
     
-    // Добавляем задачу в целевую колонку
-    if (col.id === targetColumnId) {
-      // Если перемещаем внутри той же колонки — сначала удаляем со старой позиции
-      const tasksForTarget = sourceColumnId === targetColumnId 
-        ? col.tasks.filter(t => t.id !== taskId)
-        : col.tasks;
+    if (!task) {
+      console.error('Task not found');
+      return;
+    }
+
+    if (sourceColumnId === targetColumnId) {
+    const currentIndex = sourceColumn!.tasks.findIndex(t => t.id === taskId);
+    // Корректируем targetIndex с учетом удаления
+    const adjustedTargetIndex = currentIndex < targetIndex ? targetIndex - 1 : targetIndex;
+    
+    if (currentIndex === adjustedTargetIndex) {
+      console.log('Position unchanged, skipping');
+      return;
+    }
+  }
+    
+    const taskToMove = { ...task, columnId: targetColumnId };
+    
+    // Создаем глубокую копию колонок
+    const updatedColumns = currentBoard.columns.map(col => ({
+      ...col,
+      tasks: col.tasks.map(t => ({ ...t }))
+    }));
+    
+    if (sourceColumnId === targetColumnId) {
+      // Перемещение внутри одной колонки
+      const column = updatedColumns.find(col => col.id === targetColumnId);
+      if (!column) return;
       
-      return {
-        ...col,
-        tasks: [...tasksForTarget, taskToMove].map((t, idx) => ({ ...t, order: idx }))
-      };
+      // Удаляем задачу
+      const tasksWithoutMoved = column.tasks.filter(t => t.id !== taskId);
+      // Вставляем на новую позицию
+      const newTasks = [
+        ...tasksWithoutMoved.slice(0, targetIndex),
+        taskToMove,
+        ...tasksWithoutMoved.slice(targetIndex)
+      ].map((t, idx) => ({ ...t, order: idx }));
+      
+      column.tasks = newTasks;
+    } else {
+      // Перемещение между колонками
+      updatedColumns.forEach(col => {
+        if (col.id === sourceColumnId) {
+          col.tasks = col.tasks.filter(t => t.id !== taskId).map((t, idx) => ({ ...t, order: idx }));
+        }
+        if (col.id === targetColumnId) {
+          const newTasks = [
+            ...col.tasks.slice(0, targetIndex),
+            taskToMove,
+            ...col.tasks.slice(targetIndex)
+          ].map((t, idx) => ({ ...t, order: idx }));
+          col.tasks = newTasks;
+        }
+      });
     }
     
-    return col;
-  });
-
-  // ✅ Оптимистичное обновление Redux
-  dispatch(removeTask({ columnId: sourceColumnId, taskId }));
-  dispatch(addTask({ columnId: targetColumnId, task: taskToMove }));
-
-  // ✅ Синхронизация с бэкендом
-  boardService.update(currentBoard.id, { columns: updatedColumns });
-
+    // Обновляем Redux
+    dispatch(updateColumnsOrder(updatedColumns));
+    
+    // Отправляем на сервер (может быть тяжелым, можно тоже задебаунсить)
+    boardService.update(currentBoard.id, { columns: updatedColumns }).catch(err => {
+      console.error('Failed to update board after moveTask:', err);
+    });
+    
+  }, 100); // 100ms debounce
 }, [currentBoard, dispatch]);
 
   const moveColumn = useCallback((dragIndex: number, hoverIndex: number) => {

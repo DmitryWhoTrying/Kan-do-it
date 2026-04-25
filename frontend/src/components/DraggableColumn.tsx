@@ -6,13 +6,14 @@ import Task from './Task';
 import { ItemTypes } from '../types/dnd-types';
 import {  updateColumn  } from '../store/boardSlice';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
+import DraggableTask from './DraggableTask';
 
 
 interface DraggableColumnProps {
   column: ColumnType;
   index: number;
   boardId: number;
-  onMoveTask: (taskId: number, sourceColumnId: number, targetColumnId: number) => void;
+  onMoveTask: (taskId: number, sourceColumnId: number, targetColumnId: number, targetIndex: number) => void;
   onMoveColumn: (dragIndex: number, hoverIndex: number) => void;
   onUpdateTask: (columnId: number, updatedTask: TaskType) => void;
   onAddTask?: (columnId: number, task: Omit<TaskType, 'id'>) => void; // ✅ Новый проп
@@ -23,7 +24,7 @@ interface DraggableColumnProps {
 }
 
 interface DragItem {
-  index: number;
+  idx: number;
   id: number;
   type: string;
   columnId?: number;
@@ -58,7 +59,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   const [{ isDragging }, drag, preview] = useDrag({
     type: ItemTypes.COLUMN,
     item: { 
-      index, 
+      idx: index, 
       id: column.id,
       type: ItemTypes.COLUMN 
     },
@@ -72,16 +73,32 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   // Настройка drop для колонки (принимает и задачи, и колонки)
   const [{ isOver }, drop] = useDrop<DragItem, void, { isOver: boolean }>({
     accept: [ItemTypes.COLUMN, ItemTypes.TASK],
-    drop: (item) => 
-      {
-      // Если это задача - перемещаем её в эту колонку
+    drop: (item, monitor) => {
       if (item.type === ItemTypes.TASK) {
-        console.log('Task dropped on column:', item);
-        if (item.columnId !== column.id) {
-          onMoveTask(item.id, item.columnId!, column.id);
+        // Получаем координаты мыши относительно колонки
+        const clientOffset = monitor.getClientOffset();
+        if (!clientOffset) return;
+        
+        // Находим все задачи в колонке
+        const taskElements = document.querySelectorAll(`.column[data-column-id="${column.id}"] .task`);
+        
+        let targetIndex = column.tasks.length; // По умолчанию в конец
+        
+        // Ищем, между какими задачами находится курсор
+        for (let i = 0; i < taskElements.length; i++) {
+          const rect = taskElements[i].getBoundingClientRect();
+          const middleY = (rect.top + rect.bottom) / 2;
+          
+          if (clientOffset.y < middleY) {
+            targetIndex = i;
+            break;
+          }
         }
+        
+        console.log('Task dropped on column at index:', targetIndex);
+        onMoveTask(item.id!, item.columnId!, column.id, targetIndex);
       }
-    },
+  },
     hover: (item, monitor) => {
       if (item.type !== ItemTypes.COLUMN) {
         return; // ❌ Задачи не должны запускать перемещение колонок
@@ -91,7 +108,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
 
       // Обработка перетаскивания колонки
       if (item.type === ItemTypes.COLUMN) {
-        const dragIndex = item.index;
+        const dragIndex = item.idx;
         const hoverIndex = index;
 
         if (dragIndex === hoverIndex) return;
@@ -110,7 +127,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
 
         // Перемещаем колонку
         onMoveColumn(dragIndex, hoverIndex);
-        item.index = hoverIndex;
+        item.idx = hoverIndex;
       }
     },
     collect: (monitor) => ({
@@ -210,19 +227,29 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
         {column.tasks
           .slice()
           .sort((a, b) => (a.order || 0) - (b.order || 0))
-          .map((task) => (
-            <Task
+          .map((task, idx) => (
+            <DraggableTask
               key={task.id}
               task={task}
+              index={idx}
               columnId={column.id}
               boardId={boardId}
+              onMoveTask={onMoveTask}
               onUpdateTask={onUpdateTask}
-              onDeleteTask={onAddTask ? (colId, taskId) => {
-                onDeleteTask?.(colId, taskId);
-              } : undefined}
+              onDeleteTask={onDeleteTask}
               onDeleteImage={onDeleteTaskImage}
               onAddImage={onAddTaskImage}
-            />
+            >
+              <Task
+                task={task}
+                columnId={column.id}
+                boardId={boardId}
+                onUpdateTask={onUpdateTask}
+                onDeleteTask={onDeleteTask}
+                onDeleteImage={onDeleteTaskImage}
+                onAddImage={onAddTaskImage}
+              />
+            </DraggableTask>
           ))}
 
         {/* Форма добавления задачи */}
