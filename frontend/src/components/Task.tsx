@@ -5,6 +5,7 @@ import { TaskImage, Task as TaskType } from '../../../shared/types';
 import { ItemTypes } from '../types/dnd-types';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { TaskImageUpload } from './TaskImageUpload/TaskImageUpload';
+
 //import { setTask } from '../store/boardSlice';
 
 interface TaskProps {
@@ -29,7 +30,7 @@ const Task: React.FC<TaskProps> = ({
   const dispatch = useAppDispatch();
   const ref = useRef<HTMLDivElement>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout>();
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>();
 
   const currentUser = useAppSelector(state => state.board.currentUser);
   const [editTitle, setEditTitle] = useState(task.title);

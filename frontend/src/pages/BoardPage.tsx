@@ -28,8 +28,8 @@ const BoardPage: React.FC = () => {
   const [newColumnTitle, setNewColumnTitle] = useState('');
   const [boardUsers, setBoardUsers] = useState<BoardUser[]>([]);
 
-  const moveTaskTimeoutRef = useRef<NodeJS.Timeout>();
-const lastMoveTaskRef = useRef<{ taskId: number; targetIndex: number } | null>(null);
+  const moveTaskTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+  const lastMoveTaskRef = useRef<{ taskId: number; targetIndex: number } | null>(null);
 
   const { currentBoard, currentUser, isLoading, error } = useAppSelector(state => state.board);
 

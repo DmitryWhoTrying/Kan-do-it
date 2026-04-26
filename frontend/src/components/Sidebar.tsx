@@ -342,10 +342,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             </div>
           )}
         </div>
-      <div className="menu-item">
-        <span className="icon">🪄</span>
-        <span className="text">O разработчике</span>
-      </div>
+
       <div className="menu-item"
         onClick={handleBoardDelete}>
         <span className="icon">❌</span>
