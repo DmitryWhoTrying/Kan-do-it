@@ -36,6 +36,12 @@ const Task: React.FC<TaskProps> = ({
   const [editTitle, setEditTitle] = useState(task.title);
   const [isEditing, setIsEditing] = useState(false);
 
+  //
+  const usrCanDrag = currentUser?.permission !== 'view-only';
+  const usrCanEdit = usrCanDrag && currentUser?.permission !== 'drag-n-drop';
+  const usrIsOwner = currentUser?.permission === 'owner';
+  const usrViewOnly = currentUser?.permission === 'view-only';
+
   // Форматирование даты
   const formatDate = (dateString: string | null) => {
     if (!dateString) return null;
@@ -86,7 +92,7 @@ const Task: React.FC<TaskProps> = ({
   return (
     <div
       ref={ref}
-      className={`task ${currentUser?.permission === 'view-only' ? 'task--read-only' : ''} ${isOverdue ? 'task--overdue' : ''}`}
+      className={`task ${usrViewOnly ? 'task--read-only' : ''} ${isOverdue ? 'task--overdue' : ''}`}
 
     >
       {/* Заголовок задачи */}
@@ -104,7 +110,7 @@ const Task: React.FC<TaskProps> = ({
         ) : (
           <h4 
             className="task-title"
-            onClick={() => !(currentUser?.permission === 'view-only' || currentUser?.permission ==='drag-n-drop') && setIsEditing(true)}
+            onClick={() => usrCanEdit && setIsEditing(true)}
             title={task.description || task.title}
           >
             {task.title}
@@ -126,7 +132,7 @@ const Task: React.FC<TaskProps> = ({
         </div>
         <div style={{display: 'flex', justifyContent: 'space-between'}}>
         {/* Кнопка удаления */}
-        {!(currentUser?.permission === 'view-only' || currentUser?.permission ==='drag-n-drop') && onDeleteTask && (
+        {usrCanEdit && onDeleteTask && (
           <button
             className="btn-delete-task"
             onClick={handleDelete}
@@ -164,7 +170,7 @@ const Task: React.FC<TaskProps> = ({
                   onClick={() => window.open(img.url, '_blank')} // Открыть в полном размере
                 />
                 {/* Кнопка удаления (только для владельца/редактора) */}
-                {currentUser?.permission === 'owner' || currentUser?.permission === 'edit' ? (
+                {usrCanEdit ? (
                   <button 
                     className="btn-delete-image"
                     onClick={(e) => {
@@ -181,7 +187,7 @@ const Task: React.FC<TaskProps> = ({
         )}
 
         {/* Кнопка добавления изображения */}
-        {(currentUser?.permission === 'owner' || currentUser?.permission === 'edit') && (
+        {usrCanEdit && (
           <TaskImageUpload
             taskId={task.id}
             boardId={boardId}

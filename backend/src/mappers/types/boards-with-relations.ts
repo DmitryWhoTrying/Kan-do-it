@@ -5,7 +5,7 @@ import {
   BoardUser as PrismaBoardUser, 
   User as PrismaUser,
   Permission as PrismaPermission 
-} from '../../../generated/prisma/client';
+} from '@prisma/client';
 
 // Board с подгруженными отношениями для маппинга
 export type BoardWithRelations = PrismaBoard & {

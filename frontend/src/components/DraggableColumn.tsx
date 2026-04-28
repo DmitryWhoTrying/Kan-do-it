@@ -55,6 +55,12 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   const [isCreating, setIsCreating] = useState(false);
   const [newTaskEndDate, setNewTaskEndDate] = useState('');
 
+  //виды разрешений
+  const usrCanDrag = currectUser?.permission !== 'view-only';
+  const usrCanEdit = usrCanDrag && currectUser?.permission !== 'drag-n-drop';
+  const usrIsOwner = currectUser?.permission === 'owner';
+  const usrViewOnly = currectUser?.permission === 'view-only';
+
   // Настройка drag для колонки
   const [{ isDragging }, drag, preview] = useDrag({
     type: ItemTypes.COLUMN,
@@ -63,7 +69,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
       id: column.id,
       type: ItemTypes.COLUMN 
     },
-    canDrag: currectUser?.permission !== 'view-only',
+    canDrag: usrCanDrag,
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -201,7 +207,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
   return (
     <div
       ref={columnRef}
-      className={`column ${currectUser?.permission === 'view-only' ? 'column--read-only' : ''}`}
+      className={`column ${usrViewOnly ? 'column--read-only' : ''}`}
       style={{ 
         opacity
       }}
@@ -211,7 +217,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
         <h3 className="column-title">{column.title}</h3>
         <span className="task-count">{column.tasks.length}</span>
         
-        {!(currectUser?.permission ===  'view-only' || currectUser?.permission === 'drag-n-drop') && onDeleteColumn && (
+        {!(usrCanEdit) && onDeleteColumn && (
           <button 
             className="btn-delete-column"
             onClick={() => onDeleteColumn(column.id)}
@@ -253,7 +259,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
           ))}
 
         {/* Форма добавления задачи */}
-        {!(currectUser?.permission === 'view-only' || currectUser?.permission === 'drag-n-drop') 
+        {!(usrCanDrag) 
         ? (
           isAddingTask ? (
             <div className="add-task-form">
@@ -267,7 +273,7 @@ const DraggableColumn: React.FC<DraggableColumnProps> = ({
                 autoFocus
               />
               
-              {/* ✅ Поле выбора даты дедлайна */}
+              {/* Поле выбора даты дедлайна */}
               <div className="task-form-group">
                 <label className="task-form-label">
                   📅 Крайний срок (необязательно)

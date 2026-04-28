@@ -41,11 +41,16 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const {currentBoard} = useAppSelector((state) =>  state.board);
 
+  const usrCanDrag = currentUser?.permission !== 'view-only';
+  const usrCanEdit = usrCanDrag && currentUser?.permission !== 'drag-n-drop';
+  const usrIsOwner = currentUser?.permission === 'owner';
+  const usrViewOnly = currentUser?.permission === 'view-only';
+
   const handleBoardDelete = () => {
     if (!currentBoard)
       return;
 
-    if (currentUser?.permission !== 'owner'){
+    if (!usrIsOwner){
       alert('Только владелец доски может её удалить!');
       return;
     }

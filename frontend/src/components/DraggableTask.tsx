@@ -4,6 +4,7 @@ import { useDrag, useDrop } from 'react-dnd';
 import { getEmptyImage } from 'react-dnd-html5-backend';
 import { ItemTypes } from '../types/dnd-types';
 import { Task as TaskType } from '../../../shared/types';
+import { useAppSelector } from '../store/hooks';
 
 interface DraggableTaskProps {
   task: TaskType;
@@ -28,9 +29,17 @@ const DraggableTask: React.FC<DraggableTaskProps> = ({
   const ref = useRef<HTMLDivElement>(null);
   const [dragIndex, setDragIndex] = useState<number>(index);
   const [dragColumnId, setDragColumnId] = useState<number>(columnId);
+
+  const currentUser = useAppSelector(state => state.board.currentUser);
+
+  const usrCanDrag = currentUser?.permission !== 'view-only';
+  const usrCanEdit = usrCanDrag && currentUser?.permission !== 'drag-n-drop';
+  const usrIsOwner = currentUser?.permission === 'owner';
+  const usrViewOnly = currentUser?.permission === 'view-only';
   
   // Drag
   const [{ isDragging }, drag, preview] = useDrag({
+    canDrag: usrCanDrag,
     type: ItemTypes.TASK,
     item: () => {
       // Сохраняем начальные позиции
@@ -95,7 +104,7 @@ const DraggableTask: React.FC<DraggableTaskProps> = ({
         },
     
     drop: (draggedItem: { id: number; columnId: number; index: number }) => {
-      // ✅ ТОЛЬКО ЗДЕСЬ вызываем реальное перемещение
+      //вызываем реальное перемещение
       if (dropTargetIndex !== null && dropTargetIndex !== draggedItem.index) {
         console.log('Dropping task:', {
           taskId: draggedItem.id,

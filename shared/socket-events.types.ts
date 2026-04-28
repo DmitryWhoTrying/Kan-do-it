@@ -1,5 +1,5 @@
 import { Board, BoardUser, TaskImage } from "../shared/types";
-import { Task, Column, Permission } from "./types";
+import { Task, Column} from "./types";
 
 export interface ClientToServerEvents{
     //события доски
