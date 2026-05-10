@@ -1817,3 +1817,4 @@ backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs
 backend/node_modules/@prisma/client/runtime/wasm-compiler-edge.mjs.map
 backend/node_modules/@prisma/client/scripts/default-index.js
 backend/node_modules/@prisma/client-runtime-utils/package.json
+backend/prisma/migrations/20260510162405_add_share_links/migration.sql

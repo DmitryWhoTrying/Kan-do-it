@@ -6,7 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
-  url = env("DATABASE_URL")
+  url      = env("DATABASE_URL")
   //output   = "../generated/prisma" лучше не морочить этим голову
 }
 
@@ -14,72 +14,83 @@ datasource db {
   provider = "postgresql"
 }
 
-model Column{
-  id          Int @id @default(autoincrement())
-  title       String
-  tasks       Task[]
-  order       Int
-  board       Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  boardId     Int
+model Column {
+  id      Int    @id @default(autoincrement())
+  title   String
+  tasks   Task[]
+  order   Int
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId Int
 }
 
-model Task{
-  id          Int      @id @default(autoincrement()) 
-  title       String   
+model Task {
+  id          Int         @id @default(autoincrement())
+  title       String
   description String?
-  startDate   DateTime @default(now())
+  startDate   DateTime    @default(now())
   endDate     DateTime?
   tag         String
-  Column      Column? @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  Column      Column?     @relation(fields: [columnId], references: [id], onDelete: Cascade)
   columnId    Int?
   order       Int
   images      TaskImage[]
 }
 
 model TaskImage {
-  id          Int      @id @default(autoincrement())  
-  task        Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  taskId      Int?
+  id     Int   @id @default(autoincrement())
+  task   Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId Int?
 
-  filename    String
-  storedName  String
-  mimetype    String
-  size        Int
+  filename   String
+  storedName String
+  mimetype   String
+  size       Int
 
-  width       Int
-  height      Int
+  width  Int
+  height Int
 
-  url         String  
+  url          String
   thumbnailUrl String?
 
-  order       Int @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model BoardUser{
-  userId          Int
-  user            User @relation(fields: [userId], references: [id], onDelete: Cascade)
+model BoardUser {
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  boardId         Int
-  board           Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  boardId Int
+  board   Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
 
-  permission  Permission
+  permission Permission
 
   @@id([userId, boardId])
 }
 
-model User{
-  id          Int @id @default(autoincrement())
-  name        String
-  boardUsers  BoardUser[] 
+model User {
+  id         Int         @id @default(autoincrement())
+  name       String
+  boardUsers BoardUser[]
 }
 
-model Board{
-  id          Int @id @default(autoincrement())
-  name        String
-  users       BoardUser[]
-  columns     Column[]
+model Board {
+  id         Int         @id @default(autoincrement())
+  name       String
+  users      BoardUser[]
+  columns    Column[]
+  shareLinks ShareLink[]
+}
+
+model ShareLink {
+  id      String @id @default(uuid())
+  
+  boardId Int
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+
+  permission Permission
+  expiresAt  DateTime?
 }
 
 enum Permission {
