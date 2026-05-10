@@ -8,5 +8,6 @@ export interface IShareLinkRepository{
     create(shareLink: Omit<ShareLink, 'id'>): Promise<ShareLink>;
     update(id: string, data: Partial<ShareLink>): Promise<ShareLink | null>;
     delete(id: string): Promise<boolean>;
+    deleteByBoard(boardId: number): Promise<boolean>;
     findAll(): Promise<ShareLink[]>;
 }

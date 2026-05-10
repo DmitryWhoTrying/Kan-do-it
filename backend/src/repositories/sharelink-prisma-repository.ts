@@ -76,6 +76,18 @@ export class PrismaShareLinkRepository implements IShareLinkRepository {
             return true;
         return false;
     }
+
+     async deleteByBoard(boardId: number): Promise<boolean> {
+        const result = await this.prisma.shareLink.deleteMany({
+            where: {boardId}
+        });
+        
+        if (result)
+            return true;
+        return false;
+    }
+
+
     async findAll(): Promise<ShareLink[]> {
         const prismaShareLinks = await this.prisma.shareLink.findMany({});
 

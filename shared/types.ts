@@ -35,6 +35,13 @@ export interface BoardUser{
   permission: 'edit' | 'drag-n-drop' | 'view-only' | 'owner';
 }
 
+export interface ShareLink{
+  id: string;
+  boardId: number;
+  expiresAt?: string;
+  permission: 'edit' | 'drag-n-drop' | 'view-only';
+}
+
 export enum Permission{
   'edit', 'drag-n-drop', 'view-only', 'owner'
 }
