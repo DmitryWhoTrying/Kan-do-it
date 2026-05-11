@@ -9,6 +9,7 @@ import { createBoardRoutes } from './routes/board.routes';
 import { createUserRoutes } from './routes/user.routes';
 import { createBoardUserRoutes } from './routes/boarduser.routes';
 import { createAuthRoutes } from './routes/auth.routes';
+import { createShareLinkRoutes } from './routes/sharelink.routes';
 import 'dotenv/config'
 
 import dotenv from 'dotenv';
@@ -36,6 +37,9 @@ import { TaskImageController } from './controller/task-image-controller';
 import path from 'path';
 import { ImageService } from './service/image-service';
 import { TaskImagePrismaRepository } from './repositories/task-image-prisma-repository';
+import { ShareLinkController } from './controller/sharelink-controller';
+import { ShareLinkService } from './service/sharelink-service';
+import { PrismaShareLinkRepository } from './repositories/sharelink-prisma-repository';
 
 dotenv.config();
 
@@ -100,6 +104,10 @@ const taskImageRepository = new TaskImagePrismaRepository(prisma);
 const taskImageService = new ImageService(undefined, taskImageRepository);
 const taskImageController = new TaskImageController(taskImageService, socketEmitter);
 
+const shareLinkRepository = new PrismaShareLinkRepository(prisma);
+const shareLinkService = new ShareLinkService(shareLinkRepository);
+const shareLinkController = new ShareLinkController(shareLinkService, boardUserService);
+
 console.log('Registering routes...');
 
 // Регистрация HTTP-роутов
@@ -119,10 +127,13 @@ app.use('/api/tasks', createTaskRoutes(taskController));
 console.log('✓ Task routes registered');
 
 app.use('/api/auth', createAuthRoutes(authController));
-console.log('✓ Authentification routes registered')
+console.log('✓ Authentification routes registered');
 
-app.use('/api', createTaskImageRoutes(taskImageController))
-console.log('✓ Task image routes registered')
+app.use('/api/sharelink', createShareLinkRoutes(shareLinkController));
+console.log('✓Sharelink routes registered');
+
+app.use('/api', createTaskImageRoutes(taskImageController));
+console.log('✓ Task image routes registered');
 
 // Health check endpoint
 app.get('/health', (req, res) => {

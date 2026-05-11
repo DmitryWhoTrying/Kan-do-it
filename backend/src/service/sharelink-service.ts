@@ -31,6 +31,16 @@ export class ShareLinkService{
         return shareLink;
     }
 
+    async findAll(){
+        const shareLinks = await this.shareLinkRepository.findAll();
+
+        if (!shareLinks){
+            throw new Error('No links found');
+        }
+
+        return shareLinks;
+    }
+
     async create(data: Omit<ShareLink, 'id'>){
         const shareLink = await this.shareLinkRepository.create(data);
         return shareLink;

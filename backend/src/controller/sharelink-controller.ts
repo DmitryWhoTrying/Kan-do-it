@@ -25,6 +25,17 @@ export class ShareLinkController{
         }
     }
 
+    async findAll(req: Request, res: Response){
+        try{
+        const shareLinks = await this.shareLinkService.findAll();
+
+        res.status(200).json({success: true, data: shareLinks});
+        } catch(error){
+            res.status(500).json({success: false, error: (error as Error).message});
+        }
+
+    }
+
     async create(req: Request, res: Response){
         const { boardId, expiresAt, permission } = req.body;
 
